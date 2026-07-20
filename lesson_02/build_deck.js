@@ -200,7 +200,32 @@ function iconCircle(slide, x, y, d, label, fillColor, textColor) {
 }
 
 // =====================================================================
-// SLIDE 5 — כלים חינמיים
+// SLIDE 5 — אתם כבר עובדים ליד AI
+// =====================================================================
+{
+  const s = pres.addSlide();
+  s.background = { color: TEAL_TINT };
+  addSlideTitle(s, "אתם כבר עובדים ליד AI");
+
+  s.addText(
+    [
+      { text: "• רובכם כבר משתמשים ב-ChatGPT/Claude לכתיבת קוד עזר למחקר", options: { breakLine: true } },
+      { text: "• מה עשיתם עם הקוד שקיבלתם? העתקתם-הדבקתם לקובץ", options: { breakLine: true } },
+      { text: "• כלי אג'נטי עושה בדיוק את זה — רק כותב ישירות, וקורא את הפרויקט קודם", options: { breakLine: false } },
+    ],
+    { x: 0.6, y: 1.9, w: 12.13, h: 2.2, align: "right", fontFace: BODY_FONT, fontSize: 17, color: TEXT_DARK, rtlMode: true, paraSpaceAfter: 14, margin: 0 }
+  );
+
+  s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 4.4, w: 12.13, h: 1.3, rectRadius: 0.1, fill: { color: DARK }, line: { type: "none" } });
+  s.addText("זה לא כלי חדש לגמרי — זה שדרוג למשהו שאתם כבר עושים", {
+    x: 0.9, y: 4.4, w: 11.53, h: 1.3, align: "right", valign: "middle",
+    fontFace: TITLE_FONT, bold: true, italic: true, fontSize: 18, color: TEAL, rtlMode: true, margin: 0,
+  });
+  addFooter(s, 5);
+}
+
+// =====================================================================
+// SLIDE 6 — כלים חינמיים
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -226,11 +251,11 @@ function iconCircle(slide, x, y, d, label, fillColor, textColor) {
     x: 0.9, y: 4.85, w: 10.2, h: 0.8, align: "right", valign: "middle",
     fontFace: TITLE_FONT, bold: true, fontSize: 14, color: TEXT_DARK, rtlMode: true, margin: 0,
   });
-  addFooter(s, 5);
+  addFooter(s, 6);
 }
 
 // =====================================================================
-// SLIDE 6 — Best Practices (1)
+// SLIDE 7 — Best Practices (1)
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -248,11 +273,11 @@ function iconCircle(slide, x, y, d, label, fillColor, textColor) {
     s.addText(r.h, { x: 0.6, y, w: 10.4, h: 0.4, align: "right", fontFace: TITLE_FONT, bold: true, fontSize: 18, color: TEXT_DARK, rtlMode: true, margin: 0 });
     s.addText(r.d, { x: 0.6, y: y + 0.42, w: 10.4, h: 0.8, align: "right", fontFace: BODY_FONT, fontSize: 14, color: MUTED, rtlMode: true, margin: 0 });
   });
-  addFooter(s, 6);
+  addFooter(s, 7);
 }
 
 // =====================================================================
-// SLIDE 7 — Best Practices (2)
+// SLIDE 8 — Best Practices (2)
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -270,11 +295,11 @@ function iconCircle(slide, x, y, d, label, fillColor, textColor) {
     s.addText(r.h, { x: 0.6, y, w: 10.4, h: 0.4, align: "right", fontFace: TITLE_FONT, bold: true, fontSize: 18, color: TEXT_DARK, rtlMode: true, margin: 0 });
     s.addText(r.d, { x: 0.6, y: y + 0.42, w: 10.4, h: 0.8, align: "right", fontFace: BODY_FONT, fontSize: 14, color: MUTED, rtlMode: true, margin: 0 });
   });
-  addFooter(s, 7);
+  addFooter(s, 8);
 }
 
 // =====================================================================
-// SLIDE 8 — הדגמה חיה
+// SLIDE 9 — הדגמה חיה
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -283,7 +308,7 @@ function iconCircle(slide, x, y, d, label, fillColor, textColor) {
   s.addText("פותחים session אמיתי על פרויקט קיים", { x: 0.6, y: 1.2, w: 12.13, h: 1.2, align: "center", fontFace: TITLE_FONT, bold: true, fontSize: 34, color: WHITE, rtlMode: true, margin: 0 });
   s.addText("ראו demo/prompt.md להוראות המלאות", { x: 0.6, y: 2.35, w: 12.13, h: 0.5, align: "center", fontFace: BODY_FONT, italic: true, fontSize: 15, color: ICE, rtlMode: true, margin: 0 });
   addImagePlaceholder(s, 3.5, 3.15, 6.33, 3.6, "[תמונה: מסך שיתוף — Diff מוצג לפני אישור בכלי ה-AI]", true);
-  addFooter(s, 8, true);
+  addFooter(s, 9, true);
 }
 
 // =====================================================================

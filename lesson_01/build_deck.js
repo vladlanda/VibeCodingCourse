@@ -415,7 +415,44 @@ function iconCircle(slide, x, y, d, label, fillColor, textColor) {
 }
 
 // =====================================================================
-// SLIDE 9 — הדגמה חיה
+// SLIDE 9 — עוד דוגמה: זה לא רק Google
+// =====================================================================
+{
+  const s = pres.addSlide();
+  s.background = { color: WHITE };
+  addSlideTitle(s, "עוד דוגמה: זה לא רק Google");
+
+  s.addShape(pres.ShapeType.roundRect, {
+    x: 0.6, y: 1.8, w: 12.13, h: 2.5, rectRadius: 0.1,
+    fill: { color: WARN_TINT }, line: { type: "none" },
+  });
+  iconCircle(s, 11.3, 2.0, 0.5, "!", WARN, WHITE);
+  s.addText(
+    [
+      { text: "• מרץ 2026: GitHub שינה את מסלול הסטודנטים ל-Copilot Student", options: { breakLine: true } },
+      { text: "• הפעלות חדשות מוקפאות זמנית — בלי לוח זמנים לחידוש", options: { breakLine: true } },
+      { text: "• גם ״תנאי מסלול חינם״ משתנים בלי אזהרה, לא רק כלים שלמים", options: { breakLine: false } },
+    ],
+    { x: 0.9, y: 2.1, w: 10.2, h: 2.0, align: "right", fontFace: BODY_FONT, fontSize: 15, color: TEXT_DARK, rtlMode: true, paraSpaceAfter: 10, margin: 0 }
+  );
+
+  s.addShape(pres.ShapeType.roundRect, {
+    x: 0.6, y: 4.6, w: 12.13, h: 1.5, rectRadius: 0.1,
+    fill: { color: TEAL_TINT }, line: { type: "none" },
+  });
+  s.addText("פעילות זוגות", {
+    x: 0.9, y: 4.78, w: 11.53, h: 0.4, align: "right",
+    fontFace: BODY_FONT, italic: true, fontSize: 13, color: TEAL, rtlMode: true, margin: 0,
+  });
+  s.addText("תחשבו על כלי טכנולוגי שהשתנה דרמטית בחייכם תוך שנה-שנתיים — שתפו את בן/בת הזוג", {
+    x: 0.9, y: 5.1, w: 11.53, h: 0.9, align: "right",
+    fontFace: TITLE_FONT, bold: true, fontSize: 16, color: TEXT_DARK, rtlMode: true, margin: 0,
+  });
+  addFooter(s, 9);
+}
+
+// =====================================================================
+// SLIDE 10 — הדגמה חיה
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -439,7 +476,7 @@ function iconCircle(slide, x, y, d, label, fillColor, textColor) {
     "[תמונה: מסך שיתוף / הקלטת מסך של סוכן AI בונה קוד בזמן אמת]",
     true
   );
-  addFooter(s, 9, true);
+  addFooter(s, 10, true);
 }
 
 // =====================================================================
