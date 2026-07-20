@@ -86,6 +86,22 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
   });
 }
 
+// bullet list helper: title/subtitle content + a right-side image placeholder
+function conceptSlide(n, title, bullets, imgLabel, opts = {}) {
+  const s = pres.addSlide();
+  s.background = { color: WHITE };
+  addSlideTitle(s, title);
+
+  s.addText(
+    bullets.map((b, i) => ({ text: "• " + b, options: { breakLine: i < bullets.length - 1 } })),
+    { x: 0.6, y: 1.9, w: 12.13, h: 3.0, align: "right", fontFace: BODY_FONT, fontSize: opts.fontSize || 17, color: TEXT_DARK, rtlMode: true, paraSpaceAfter: 14, margin: 0 }
+  );
+
+  addImagePlaceholder(s, 0.6, 5.0, 12.13, 1.75, imgLabel);
+  addFooter(s, n);
+  return s;
+}
+
 // =====================================================================
 // SLIDE 1 — Title
 // =====================================================================
@@ -107,7 +123,7 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
   });
   s.addText(
     [
-      { text: "• מה התפקיד של VS Code, Git ו-GitHub בזרימת העבודה?", options: { breakLine: true } },
+      { text: "• מה זה IDE, Git, GitHub — ולמה צריך כל אחד מהם?", options: { breakLine: true } },
       { text: "• מה ההבדל בין כלי Autocomplete לכלי Agentic?", options: { breakLine: true } },
       { text: "• איך פותחים ומנהלים session עם Claude Code בפועל?", options: { breakLine: true } },
       { text: "• אילו כלי AI חינמיים זמינים כדי להתחיל בלי תקציב?", options: { breakLine: false } },
@@ -123,37 +139,72 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
 }
 
 // =====================================================================
-// SLIDE 2 — VS Code, Git, GitHub
+// SLIDE 2 — מה זה בכלל IDE?
+// =====================================================================
+conceptSlide(
+  2,
+  "מה זה בכלל IDE?",
+  [
+    "קובץ טקסט רגיל (Notepad) = אין צביעת תחביר, אין השלמה, אין הרצה",
+    "IDE (סביבת פיתוח משולבת) = עורך קוד + טרמינל + כלי דיבוג, הכל במקום אחד",
+    "VS Code = ה-IDE החינמי והפופולרי ביותר כיום",
+    "רוב כלי ה-AI האג'נטיים (כולל Claude Code) מתחברים אליו כתוסף",
+  ],
+  "[תמונה: השוואה ויזואלית — Notepad עם טקסט פשוט לעומת VS Code עם עורך צבעוני, טרמינל, וסייד-בר]"
+);
+
+// =====================================================================
+// SLIDE 3 — מה הבעיה ש-Version Control פותר?
+// =====================================================================
+conceptSlide(
+  3,
+  "מה הבעיה ש-Version Control פותר?",
+  [
+    "עבודה.docx ← עבודה_v2.docx ← עבודה_v2_final.docx ← עבודה_v2_final_REALLY.docx",
+    "זה בדיוק מה שקורה עם קוד בלי כלי מתאים — וגרוע יותר כשכמה אנשים עובדים יחד",
+    "Version Control = מערכת ששומרת \"תמונת מצב\" מדויקת של הפרויקט, בכל נקודת זמן",
+  ],
+  "[תמונה: שרשרת קבצים מבולבלת עם שמות \"v2_final_REALLY\" לעומת היסטוריית Git מסודרת עם תאריכים]"
+);
+
+// =====================================================================
+// SLIDE 4 — Git
 // =====================================================================
 {
-  const s = pres.addSlide();
-  s.background = { color: WHITE };
-  addSlideTitle(s, "VS Code, Git ו-GitHub — יסודות");
-
-  const rows = [
-    { h: "VS Code", d: "סביבת הפיתוח שרוב כלי ה-AI האג'נטיים מתחברים אליה" },
-    { h: "Git", d: "רשת ביטחון: כל שינוי הוא תמונת מצב שאפשר לחזור אליה" },
-    { h: "GitHub", d: "אחסון מרוחק ושיתוף פעולה (יורחב בשבוע 10)" },
-  ];
-  rows.forEach((r, i) => {
-    const y = 1.7 + i * 1.5;
-    iconCircle(s, 6.1, y, 0.6, i + 1, TEAL, WHITE);
-    s.addText(r.h, { x: 0.6, y, w: 5.35, h: 0.4, align: "right", fontFace: TITLE_FONT, bold: true, fontSize: 18, color: TEXT_DARK, rtlMode: true, margin: 0 });
-    s.addText(r.d, { x: 0.6, y: y + 0.42, w: 5.35, h: 0.9, align: "right", fontFace: BODY_FONT, fontSize: 14, color: MUTED, rtlMode: true, margin: 0 });
-  });
-
-  addImagePlaceholder(s, 7.1, 1.7, 5.63, 3.2, "[תמונה: ממשק VS Code עם פאנל Git פתוח]");
-
-  s.addShape(pres.ShapeType.roundRect, { x: 7.1, y: 5.1, w: 5.63, h: 1.2, rectRadius: 0.1, fill: { color: TEAL_TINT }, line: { type: "none" } });
+  const s = conceptSlide(
+    4,
+    "Git — הכלי שעושה את זה בפועל",
+    [
+      "Git = כלי ניהול גרסאות שרץ על המחשב שלכם (חינמי, קוד פתוח)",
+      "Repository (\"Repo\") = תיקיית הפרויקט שעליה Git \"שומר עין\"",
+      "Commit = תמונת מצב שמורה, עם הודעה שמסבירה מה השתנה",
+    ],
+    "[תמונה: איור של \"נקודת שמירה\" במשחק מחשב, מקביל למושג Commit ב-Git]"
+  );
+  s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 4.35, w: 12.13, h: 0.55, rectRadius: 0.08, fill: { color: TEAL_TINT }, line: { type: "none" } });
   s.addText("כלל אצבע: Commit נקי לפני שנותנים ל-AI לגעת בקוד", {
-    x: 7.35, y: 5.1, w: 5.13, h: 1.2, align: "right", valign: "middle",
+    x: 0.8, y: 4.35, w: 11.73, h: 0.55, align: "right", valign: "middle",
     fontFace: TITLE_FONT, bold: true, fontSize: 14, color: TEXT_DARK, rtlMode: true, margin: 0,
   });
-  addFooter(s, 2);
 }
 
 // =====================================================================
-// SLIDE 3 — GitHub בקנה מידה
+// SLIDE 5 — GitHub
+// =====================================================================
+conceptSlide(
+  5,
+  "GitHub — לא אותו דבר כמו Git",
+  [
+    "Git ≠ GitHub — בלבול נפוץ אצל מתחילים",
+    "Git = הכלי שרץ אצלכם במחשב, שומר היסטוריה מקומית",
+    "GitHub = שירות ענן (של מיקרוסופט) שמאחסן, מגבה, ומשתף Repositories",
+    "אנלוגיה: Git הוא ה-Word, GitHub הוא Google Drive שבו הוא מגובה ומשותף",
+  ],
+  "[תמונה: דיאגרמה — מחשב מקומי עם Git מחובר בחץ לענן עם לוגו GitHub]"
+);
+
+// =====================================================================
+// SLIDE 6 — GitHub בקנה מידה
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -174,11 +225,25 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
     fontFace: TITLE_FONT, bold: true, italic: true, fontSize: 16, color: TEXT_DARK, rtlMode: true, margin: 0,
   });
   addSourceCaption(s, "מקור: Kinsta, Skillademia — GitHub Statistics 2026");
-  addFooter(s, 3);
+  addFooter(s, 6);
 }
 
 // =====================================================================
-// SLIDE 4 — Autocomplete vs Agentic
+// SLIDE 7 — מה זה בכלל "כלי AI לכתיבת קוד"?
+// =====================================================================
+conceptSlide(
+  7,
+  "מה זה בכלל \"כלי AI לכתיבת קוד\"?",
+  [
+    "תוכנה שמשלבת מודל שפה (LLM, משיעור 1) בתוך סביבת הפיתוח",
+    "כותבים בקשה בשפה טבעית (\"תוסיף כפתור שמוחק משימה\") ← הכלי מתרגם לקוד",
+    "יש כמה \"רמות\" של כלים כאלה — מהבסיסית ביותר ועד המתקדמת",
+  ],
+  "[תמונה: תרשים זרימה — בקשה בשפה טבעית → מודל שפה → קוד שנכתב בפועל בקובץ]"
+);
+
+// =====================================================================
+// SLIDE 8 — Autocomplete vs Agentic
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -213,11 +278,11 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
     x: 0.6, y: 6.0, w: 12.13, h: 0.6, align: "right",
     fontFace: TITLE_FONT, bold: true, italic: true, fontSize: 17, color: TEXT_DARK, rtlMode: true, margin: 0,
   });
-  addFooter(s, 4);
+  addFooter(s, 8);
 }
 
 // =====================================================================
-// SLIDE 5 — המרוץ לבנצ'מארק
+// SLIDE 9 — המרוץ לבנצ'מארק
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -234,11 +299,11 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
     { x: 0.9, y: 4.65, w: 10.2, h: 1.5, align: "right", valign: "middle", fontFace: TITLE_FONT, bold: true, fontSize: 14, color: TEXT_DARK, rtlMode: true, margin: 0 }
   );
   addSourceCaption(s, "מקור: DigitalApplied, MorphLLM — 2026");
-  addFooter(s, 5);
+  addFooter(s, 9);
 }
 
 // =====================================================================
-// SLIDE 6 — Claude Code workflow
+// SLIDE 10 — Claude Code workflow
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -266,11 +331,11 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
     x: 0.6, y: 5.4, w: 12.13, h: 0.5, align: "right",
     fontFace: TITLE_FONT, bold: true, fontSize: 16, color: TEAL, rtlMode: true, margin: 0,
   });
-  addFooter(s, 6);
+  addFooter(s, 10);
 }
 
 // =====================================================================
-// SLIDE 7 — אתם כבר עובדים ליד AI
+// SLIDE 11 — אתם כבר עובדים ליד AI
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -291,11 +356,11 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
     x: 0.9, y: 4.4, w: 11.53, h: 1.3, align: "right", valign: "middle",
     fontFace: TITLE_FONT, bold: true, italic: true, fontSize: 18, color: TEAL, rtlMode: true, margin: 0,
   });
-  addFooter(s, 7);
+  addFooter(s, 11);
 }
 
 // =====================================================================
-// SLIDE 8 — מי משתמש במה
+// SLIDE 12 — מי משתמש במה
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -329,11 +394,11 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
     fontFace: TITLE_FONT, bold: true, italic: true, fontSize: 14, color: TEXT_DARK, rtlMode: true, margin: 0,
   });
   addSourceCaption(s, "מקור: Stack Overflow Developer Survey 2025 · index.dev 2026");
-  addFooter(s, 8);
+  addFooter(s, 12);
 }
 
 // =====================================================================
-// SLIDE 9 — כלים חינמיים
+// SLIDE 13 — כלים חינמיים
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -359,11 +424,11 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
     x: 0.9, y: 4.85, w: 10.2, h: 0.8, align: "right", valign: "middle",
     fontFace: TITLE_FONT, bold: true, fontSize: 14, color: TEXT_DARK, rtlMode: true, margin: 0,
   });
-  addFooter(s, 9);
+  addFooter(s, 13);
 }
 
 // =====================================================================
-// SLIDE 10 — Best Practices (1)
+// SLIDE 14 — Best Practices (1)
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -381,11 +446,11 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
     s.addText(r.h, { x: 0.6, y, w: 10.4, h: 0.4, align: "right", fontFace: TITLE_FONT, bold: true, fontSize: 18, color: TEXT_DARK, rtlMode: true, margin: 0 });
     s.addText(r.d, { x: 0.6, y: y + 0.42, w: 10.4, h: 0.8, align: "right", fontFace: BODY_FONT, fontSize: 14, color: MUTED, rtlMode: true, margin: 0 });
   });
-  addFooter(s, 10);
+  addFooter(s, 14);
 }
 
 // =====================================================================
-// SLIDE 11 — Best Practices (2)
+// SLIDE 15 — Best Practices (2)
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -403,11 +468,11 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
     s.addText(r.h, { x: 0.6, y, w: 10.4, h: 0.4, align: "right", fontFace: TITLE_FONT, bold: true, fontSize: 18, color: TEXT_DARK, rtlMode: true, margin: 0 });
     s.addText(r.d, { x: 0.6, y: y + 0.42, w: 10.4, h: 0.8, align: "right", fontFace: BODY_FONT, fontSize: 14, color: MUTED, rtlMode: true, margin: 0 });
   });
-  addFooter(s, 11);
+  addFooter(s, 15);
 }
 
 // =====================================================================
-// SLIDE 12 — המחיר של דילוג על הכללים
+// SLIDE 16 — המחיר של דילוג על הכללים
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -431,11 +496,11 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
     fontFace: TITLE_FONT, bold: true, italic: true, fontSize: 17, color: WHITE, rtlMode: true, margin: 0,
   });
   addSourceCaption(s, "מקור: DORA — ROI of AI-Assisted Software Development, 2026");
-  addFooter(s, 12, true);
+  addFooter(s, 16, true);
 }
 
 // =====================================================================
-// SLIDE 13 — הדגמה חיה
+// SLIDE 17 — הדגמה חיה
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -444,11 +509,11 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
   s.addText("פותחים session אמיתי על פרויקט קיים", { x: 0.6, y: 1.2, w: 12.13, h: 1.2, align: "center", fontFace: TITLE_FONT, bold: true, fontSize: 34, color: WHITE, rtlMode: true, margin: 0 });
   s.addText("ראו demo/prompt.md להוראות המלאות", { x: 0.6, y: 2.35, w: 12.13, h: 0.5, align: "center", fontFace: BODY_FONT, italic: true, fontSize: 15, color: ICE, rtlMode: true, margin: 0 });
   addImagePlaceholder(s, 3.5, 3.15, 6.33, 3.6, "[תמונה: מסך שיתוף — Diff מוצג לפני אישור בכלי ה-AI]", true);
-  addFooter(s, 13, true);
+  addFooter(s, 17, true);
 }
 
 // =====================================================================
-// SLIDE 14 — עוברים לתרגול
+// SLIDE 18 — עוברים לתרגול
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -470,7 +535,7 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
 }
 
 // =====================================================================
-// SLIDE 15 — סיכום
+// SLIDE 19 — סיכום
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -494,7 +559,7 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
 }
 
 // =====================================================================
-// SLIDE 16 — מקורות
+// SLIDE 20 — מקורות
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -516,7 +581,7 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
     x: 0.6, y: 5.7, w: 12.13, h: 0.6, align: "right",
     fontFace: BODY_FONT, italic: true, fontSize: 13, color: MUTED, rtlMode: true, margin: 0,
   });
-  addFooter(s, 16);
+  addFooter(s, 20);
 }
 
 // =====================================================================

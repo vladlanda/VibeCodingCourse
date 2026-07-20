@@ -140,7 +140,36 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
 }
 
 // =====================================================================
-// SLIDE 2 — מהו Vibe Coding
+// SLIDE 2 — לפני שמתחילים: מה זה בכלל LLM?
+// =====================================================================
+{
+  const s = pres.addSlide();
+  s.background = { color: WHITE };
+  addSlideTitle(s, "לפני שמתחילים: מה זה בכלל LLM?");
+
+  s.addText(
+    [
+      { text: "• LLM (Large Language Model) = תוכנה שאומנה על כמויות עצומות של טקסט וקוד", options: { breakLine: true } },
+      { text: "• לא \"מבין\" כמו בן אדם — מנבא Token אחר Token מה סביר לבוא בהמשך", options: { breakLine: true } },
+      { text: "• ChatGPT ו-Claude = מודלים כאלה, מוכרים לכם כצ'אטבוטים", options: { breakLine: true } },
+      { text: "• Vibe Coding = אותה טכנולוגיה בדיוק, מחוברת ישירות לקבצי הקוד שלכם", options: { breakLine: false, bold: true, color: TEAL } },
+    ],
+    {
+      x: 0.6, y: 1.7, w: 12.13, h: 2.6, align: "right",
+      fontFace: BODY_FONT, fontSize: 16, color: TEXT_DARK, rtlMode: true,
+      paraSpaceAfter: 14, margin: 0,
+    }
+  );
+
+  addImagePlaceholder(
+    s, 0.6, 4.5, 12.13, 2.2,
+    "[תמונה: תרשים פשוט — קלט טקסט → מודל שפה (קופסה) → פלט טקסט/קוד, עם חץ לדוגמה של Token אחר Token]"
+  );
+  addFooter(s, 2);
+}
+
+// =====================================================================
+// SLIDE 3 — מהו Vibe Coding
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -169,11 +198,11 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
     s, 7.1, 1.7, 5.63, 4.6,
     "[תמונה: ממשק Claude Code בפעולה — מפתח נותן הנחיה, הסוכן כותב קוד]"
   );
-  addFooter(s, 2);
+  addFooter(s, 3);
 }
 
 // =====================================================================
-// SLIDE 3 — AI-Native Software Engineering
+// SLIDE 4 — AI-Native Software Engineering
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -213,11 +242,11 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
     x: 0.6, y: 5.85, w: 11.93, h: 0.7, align: "right",
     fontFace: TITLE_FONT, bold: true, italic: true, fontSize: 17, color: TEXT_DARK, rtlMode: true, margin: 0,
   });
-  addFooter(s, 3);
+  addFooter(s, 4);
 }
 
 // =====================================================================
-// SLIDE 4 — המספרים מאחורי המהפכה
+// SLIDE 5 — המספרים מאחורי המהפכה
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -240,11 +269,11 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
     fontFace: TITLE_FONT, bold: true, italic: true, fontSize: 16, color: TEXT_DARK, rtlMode: true, margin: 0,
   });
   addSourceCaption(s, "מקור: index.dev Developer Productivity Statistics 2026 · Forbes 2026 · Deloitte");
-  addFooter(s, 4);
+  addFooter(s, 5);
 }
 
 // =====================================================================
-// SLIDE 5 — Evolution of Software Development
+// SLIDE 6 — Evolution of Software Development
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -277,11 +306,11 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
     s, 0.6, 4.8, 12.13, 1.9,
     "[תמונה: רצף ויזואלי לכל עידן — כרטיסי ניקוב, IDE ראשון, ממשק Git, סוכן AI]"
   );
-  addFooter(s, 5);
+  addFooter(s, 6);
 }
 
 // =====================================================================
-// SLIDE 6 — ציר זמן מדויק
+// SLIDE 7 — ציר זמן מדויק
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -318,11 +347,11 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
     fontFace: TITLE_FONT, bold: true, fontSize: 18, color: TEXT_DARK, rtlMode: true, margin: 0,
   });
   addSourceCaption(s, "מקור: Wikipedia (GitHub Copilot) · Chronological History of Version Control Systems");
-  addFooter(s, 6);
+  addFooter(s, 7);
 }
 
 // =====================================================================
-// SLIDE 7 — יתרונות
+// SLIDE 8 — יתרונות
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -342,11 +371,11 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
   });
 
   addImagePlaceholder(s, 7.1, 1.7, 5.63, 4.6, "[תמונה: השוואת ״לפני / אחרי״ — זמן פיתוח שהצטמצם מימים לדקות]");
-  addFooter(s, 7);
+  addFooter(s, 8);
 }
 
 // =====================================================================
-// SLIDE 8 — חסרונות ומגבלות
+// SLIDE 9 — חסרונות ומגבלות
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -372,11 +401,11 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
     x: 0.6, y: 6.05, w: 12.13, h: 0.6, align: "right",
     fontFace: TITLE_FONT, bold: true, italic: true, fontSize: 14, color: TEXT_DARK, rtlMode: true, margin: 0,
   });
-  addFooter(s, 8);
+  addFooter(s, 9);
 }
 
 // =====================================================================
-// SLIDE 9 — האמון עדיין נמוך
+// SLIDE 10 — האמון עדיין נמוך
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -399,11 +428,11 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
     fontFace: TITLE_FONT, bold: true, italic: true, fontSize: 16, color: TEXT_DARK, rtlMode: true, margin: 0,
   });
   addSourceCaption(s, "מקור: Second Talent Developer Survey 2026");
-  addFooter(s, 9);
+  addFooter(s, 10);
 }
 
 // =====================================================================
-// SLIDE 10 — המחקר המטריד METR
+// SLIDE 11 — המחקר המטריד METR
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -432,11 +461,11 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
     x: 0.6, y: 5.7, w: 12.13, h: 0.8, align: "right",
     fontFace: TITLE_FONT, bold: true, italic: true, fontSize: 16, color: WHITE, rtlMode: true, margin: 0,
   });
-  addFooter(s, 10, true);
+  addFooter(s, 11, true);
 }
 
 // =====================================================================
-// SLIDE 11 — Workflow של מפתח מודרני
+// SLIDE 12 — Workflow של מפתח מודרני
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -466,11 +495,11 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
     x: 0.6, y: 5.75, w: 12.13, h: 0.5, align: "right",
     fontFace: TITLE_FONT, bold: true, fontSize: 18, color: TEAL, rtlMode: true, margin: 0,
   });
-  addFooter(s, 11);
+  addFooter(s, 12);
 }
 
 // =====================================================================
-// SLIDE 12 — גם הנתונים תומכים ב-Workflow
+// SLIDE 13 — גם הנתונים תומכים ב-Workflow
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -494,11 +523,11 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
     fontFace: TITLE_FONT, bold: true, fontSize: 20, color: TEAL, rtlMode: true, margin: 0,
   });
   addSourceCaption(s, "מקור: DORA — ROI of AI-Assisted Software Development, 2026");
-  addFooter(s, 12);
+  addFooter(s, 13);
 }
 
 // =====================================================================
-// SLIDE 13 — מקרה בוחן: Gemini CLI → Antigravity
+// SLIDE 14 — מקרה בוחן: Gemini CLI → Antigravity
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -525,11 +554,11 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
   });
 
   addImagePlaceholder(s, 0.6, 5.3, 12.13, 1.55, "[תמונה/לוגו: Gemini CLI ו-Google Antigravity CLI, זה לצד זה]");
-  addFooter(s, 13);
+  addFooter(s, 14);
 }
 
 // =====================================================================
-// SLIDE 14 — עוד דוגמה: זה לא רק Google
+// SLIDE 15 — עוד דוגמה: זה לא רק Google
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -553,11 +582,11 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
     x: 0.9, y: 5.1, w: 11.53, h: 0.9, align: "right",
     fontFace: TITLE_FONT, bold: true, fontSize: 16, color: TEXT_DARK, rtlMode: true, margin: 0,
   });
-  addFooter(s, 14);
+  addFooter(s, 15);
 }
 
 // =====================================================================
-// SLIDE 15 — זה קורה גם בענק
+// SLIDE 16 — זה קורה גם בענק
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -582,11 +611,11 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
     fontFace: TITLE_FONT, bold: true, italic: true, fontSize: 16, color: TEXT_DARK, rtlMode: true, margin: 0,
   });
   addSourceCaption(s, "מקור: Forbes 2026");
-  addFooter(s, 15);
+  addFooter(s, 16);
 }
 
 // =====================================================================
-// SLIDE 16 — הדגמה חיה
+// SLIDE 17 — הדגמה חיה
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -597,11 +626,11 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
   s.addText("ראו demo/prompt.md להוראות המלאות", { x: 0.6, y: 2.35, w: 12.13, h: 0.5, align: "center", fontFace: BODY_FONT, italic: true, fontSize: 15, color: ICE, rtlMode: true, margin: 0 });
 
   addImagePlaceholder(s, 3.5, 3.15, 6.33, 3.6, "[תמונה: מסך שיתוף / הקלטת מסך של סוכן AI בונה קוד בזמן אמת]", true);
-  addFooter(s, 16, true);
+  addFooter(s, 17, true);
 }
 
 // =====================================================================
-// SLIDE 17 — עוברים לתרגול
+// SLIDE 18 — עוברים לתרגול
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -625,7 +654,7 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
 }
 
 // =====================================================================
-// SLIDE 18 — סיכום
+// SLIDE 19 — סיכום
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -650,7 +679,7 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
 }
 
 // =====================================================================
-// SLIDE 19 — מקורות
+// SLIDE 20 — מקורות
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -674,7 +703,7 @@ function statCallout(slide, x, y, w, h, big, small, opts = {}) {
     x: 0.6, y: 5.7, w: 12.13, h: 0.6, align: "right",
     fontFace: BODY_FONT, italic: true, fontSize: 13, color: MUTED, rtlMode: true, margin: 0,
   });
-  addFooter(s, 19);
+  addFooter(s, 20);
 }
 
 // =====================================================================
