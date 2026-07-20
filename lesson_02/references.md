@@ -1,14 +1,25 @@
 # references.md — שיעור 2
 
-## מקורות (יולי 2026)
+## מקורות לנתונים (נבדק יולי 2026)
 
-- [Claude Code vs GitHub Copilot vs Cursor (2026): Full Comparison](https://www.cosmicjs.com/blog/claude-code-vs-github-copilot-vs-cursor-which-ai-coding-agent-should-you-use-2026)
-- [Best Free AI Coding Tools for Students 2026](https://aitoolranked.com/blog/free-ai-coding-tools-students-2026)
-- [GitHub Student Developer Pack 2026](https://codehelper.me/articles/github-student-pack/)
+### קנה מידה של GitHub
+- [Key GitHub Statistics in 2026 — Kinsta](https://kinsta.com/blog/github-statistics/)
+- [GitHub Statistics 2026: Users, Repos & Copilot Data — Skillademia](https://www.skillademia.com/statistics/github-statistics/)
+- נתונים מרכזיים: 180M+ מפתחים רשומים (36M+ הצטרפו בשנה אחת בלבד — קצב הצמיחה המהיר ביותר אי-פעם); 630M+ Repositories; 43.2M Pull Requests נמזגו בחודש; כמעט מיליארד Commits ב-2025; 92% מחברות Fortune 100 משתמשות ב-GitHub Enterprise; Copilot: 26M+ משתמשים, 4.7M+ מנויים בתשלום, כ-140,000 ארגונים.
 
-**הערת עדכניות:** מסלולי החינם ומחירי הכלים משתנים לעיתים קרובות. מומלץ לוודא סטטוס עדכני (מכסות, זמינות הרשמה ל-Student Pack) קרוב למועד ההוראה בפועל, ולעדכן את slides.md בהתאם.
+### בנצ'מארקים לכלי Agentic
+- [SWE-Bench vs Terminal-Bench: AI Benchmark Guide for 2026 — DigitalApplied](https://www.digitalapplied.com/blog/swe-bench-terminal-bench-benchmark-guide-2026)
+- [Best AI Coding Agents (June 2026): Scored Leaderboard — MorphLLM](https://www.morphllm.com/best-ai-coding-agents-2026)
+- [12 AI Coding Agents Compared in 2026 — SSOJet](https://ssojet.com/blog/ai-coding-agents-compared)
+- נתונים מרכזיים: Claude Code — 80.8% ב-SWE-bench Verified. Terminal-Bench 2.1: Codex CLI מוביל ב-83.4%, Claude Code בגרסאות שונות בין 78.9%-83.1%. **אזהרת מתודולוגיה חשובה:** יש 5 גרסאות שונות של SWE-bench (Original, Verified, Pro, Multilingual, Live) והשוואה ביניהן בעייתית; יש שונות (variance) של 10-20 נקודות אחוז בין הרצות שונות של אותו מודל בדיוק, בהתאם ל-harness. אף פעם אל תציגו מספר בנצ'מארק בודד כ"אמת מוחלטת".
 
-## קריאה נוספת לסטודנטים
+### נתח שימוש בכלים בפועל
+- Stack Overflow Developer Survey 2025 (מוזכר במספר מקורות 2026): ChatGPT — 82% (out-of-the-box assistance), GitHub Copilot — 68%; מבין ה-IDE-ים מבוססי AI: Cursor — 18%, Claude Code — 10%, Windsurf — 5%.
+- [Top 100 Developer Productivity Statistics with AI Tools 2026 — index.dev](https://www.index.dev/blog/developer-productivity-statistics-with-ai-tools) — בבחירת "כלי ראשי" (primary tool): Claude Code 28%, Cursor 24%.
+- **הערה לשימוש בכיתה:** שני הסקרים מודדים דברים שונים (נתח שימוש כללי מול בחירת כלי ראשי אצל מי שכבר בחר כלי Agentic) — לכן המספרים לא סותרים, אבל כדאי להסביר את ההבדל לסטודנטים כדי לא ליצור בלבול.
 
-- תיעוד רשמי של VS Code: docs.github.com, code.visualstudio.com/docs
-- תיעוד Git הרשמי: git-scm.com/doc
+### DORA — עלות של עבודה בלי Best Practices
+- [DORA: ROI of AI-assisted Software Development report](https://dora.dev/ai/)
+- אימוץ AI בלי תהליך מסודר מוביל ל-30-41% יותר חוב טכני; Pull Requests שנכתבו ב-AI נושאים פי 1.7 יותר בעיות מ-PR אנושי.
+
+**הערת עדכניות:** נתוני אימוץ ובנצ'מארק משתנים חודשית בתחום הזה. יש לוודא סטטוס עדכני לפני כל הוראה בפועל.

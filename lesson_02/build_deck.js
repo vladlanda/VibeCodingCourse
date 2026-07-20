@@ -5,6 +5,7 @@ pres.layout = "LAYOUT_WIDE"; // 13.33 x 7.5
 
 // ---------- palette (matches lesson_01 for course brand consistency) ----------
 const DARK = "1B1F3B";
+const DARK2 = "2A2F55";
 const TEAL = "00C2A8";
 const TEAL_TINT = "E6FBF7";
 const ICE = "CADCFC";
@@ -52,12 +53,36 @@ function addFooter(slide, n, dark) {
   });
 }
 
+function addSourceCaption(slide, text) {
+  slide.addText(text, {
+    x: 0.6, y: 6.75, w: 12.13, h: 0.3,
+    align: "right", fontFace: BODY_FONT, italic: true, fontSize: 10,
+    color: MUTED, rtlMode: true, margin: 0,
+  });
+}
+
 function iconCircle(slide, x, y, d, label, fillColor, textColor) {
   slide.addShape(pres.ShapeType.ellipse, { x, y, w: d, h: d, fill: { color: fillColor }, line: { type: "none" } });
   slide.addText(String(label), {
     x, y, w: d, h: d, align: "center", valign: "middle",
     fontFace: TITLE_FONT, bold: true, fontSize: d > 0.6 ? 20 : 14,
     color: textColor, margin: 0,
+  });
+}
+
+function statCallout(slide, x, y, w, h, big, small, opts = {}) {
+  slide.addShape(pres.ShapeType.roundRect, {
+    x, y, w, h, rectRadius: 0.1,
+    fill: { color: opts.fill || TEAL_TINT }, line: { type: "none" },
+  });
+  slide.addText(big, {
+    x, y: y + 0.15, w, h: h - 0.75, align: "center", valign: "bottom",
+    fontFace: TITLE_FONT, bold: true, fontSize: opts.bigSize || 38,
+    color: opts.bigColor || TEAL, margin: 0,
+  });
+  slide.addText(small, {
+    x: x + 0.15, y: y + h - 0.65, w: w - 0.3, h: 0.6, align: "center", valign: "top",
+    fontFace: BODY_FONT, fontSize: 12.5, color: opts.smallColor || TEXT_DARK, rtlMode: true, margin: 0,
   });
 }
 
@@ -128,7 +153,32 @@ function iconCircle(slide, x, y, d, label, fillColor, textColor) {
 }
 
 // =====================================================================
-// SLIDE 3 — Autocomplete vs Agentic
+// SLIDE 3 — GitHub בקנה מידה
+// =====================================================================
+{
+  const s = pres.addSlide();
+  s.background = { color: WHITE };
+  addSlideTitle(s, "GitHub בקנה מידה");
+
+  const stats = [
+    { big: "180M+", small: "מפתחים רשומים (36M+ הצטרפו בשנה האחרונה)" },
+    { big: "630M+", small: "Repositories" },
+    { big: "43.2M", small: "Pull Requests נמזגים בכל חודש" },
+    { big: "92%", small: "מחברות Fortune 100 משתמשות ב-GitHub Enterprise" },
+  ];
+  const xs = [9.75, 6.83, 3.91, 0.99];
+  stats.forEach((st, i) => statCallout(s, xs[i], 1.9, 2.7, 2.9, st.big, st.small));
+
+  s.addText("זו לא \"עוד פלטפורמה\" — זו התשתית של התעשייה.", {
+    x: 0.6, y: 5.2, w: 12.13, h: 0.7, align: "right",
+    fontFace: TITLE_FONT, bold: true, italic: true, fontSize: 16, color: TEXT_DARK, rtlMode: true, margin: 0,
+  });
+  addSourceCaption(s, "מקור: Kinsta, Skillademia — GitHub Statistics 2026");
+  addFooter(s, 3);
+}
+
+// =====================================================================
+// SLIDE 4 — Autocomplete vs Agentic
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -163,11 +213,32 @@ function iconCircle(slide, x, y, d, label, fillColor, textColor) {
     x: 0.6, y: 6.0, w: 12.13, h: 0.6, align: "right",
     fontFace: TITLE_FONT, bold: true, italic: true, fontSize: 17, color: TEXT_DARK, rtlMode: true, margin: 0,
   });
-  addFooter(s, 3);
+  addFooter(s, 4);
 }
 
 // =====================================================================
-// SLIDE 4 — Claude Code workflow
+// SLIDE 5 — המרוץ לבנצ'מארק
+// =====================================================================
+{
+  const s = pres.addSlide();
+  s.background = { color: WHITE };
+  addSlideTitle(s, "המרוץ לבנצ'מארק");
+
+  statCallout(s, 6.93, 1.9, 5.6, 2.3, "80.8%", "Claude Code ב-SWE-bench Verified", { bigSize: 44 });
+  statCallout(s, 0.6, 1.9, 5.6, 2.3, "78.9-83.1%", "Claude Code ב-Terminal-Bench 2.1 (טווח לפי מודל)", { bigSize: 36 });
+
+  s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 4.5, w: 12.13, h: 1.8, rectRadius: 0.1, fill: { color: WARN_TINT }, line: { type: "none" } });
+  iconCircle(s, 11.3, 4.7, 0.5, "!", WARN, WHITE);
+  s.addText(
+    "אזהרת מתודולוגיה: יש 5 גרסאות שונות של SWE-bench, ושונות של 10-20 נקודות בין הרצות זהות. תמיד בדקו מתודולוגיה לפני שסומכים על מספר בנצ'מארק בודד.",
+    { x: 0.9, y: 4.65, w: 10.2, h: 1.5, align: "right", valign: "middle", fontFace: TITLE_FONT, bold: true, fontSize: 14, color: TEXT_DARK, rtlMode: true, margin: 0 }
+  );
+  addSourceCaption(s, "מקור: DigitalApplied, MorphLLM — 2026");
+  addFooter(s, 5);
+}
+
+// =====================================================================
+// SLIDE 6 — Claude Code workflow
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -180,13 +251,12 @@ function iconCircle(slide, x, y, d, label, fillColor, textColor) {
     const x = xs[i];
     const fill = i === 3 ? WARN_TINT : TEAL_TINT;
     s.addShape(pres.ShapeType.roundRect, { x, y: 2.2, w: 2.15, h: 1.7, rectRadius: 0.1, fill: { color: fill }, line: { type: "none" } });
-    iconCircle(s, x + 0.78, y_step(), 0.55, i + 1, i === 3 ? WARN : TEAL, WHITE);
+    iconCircle(s, x + 0.78, 2.35, 0.55, i + 1, i === 3 ? WARN : TEAL, WHITE);
     s.addText(label, { x, y: 3.15, w: 2.15, h: 0.65, align: "center", valign: "top", fontFace: TITLE_FONT, bold: true, fontSize: 13, color: TEXT_DARK, margin: 2 });
     if (i < steps.length - 1) {
       s.addText("←", { x: x + 2.15, y: 2.2, w: 0.35, h: 1.7, align: "center", valign: "middle", fontFace: TITLE_FONT, bold: true, fontSize: 20, color: MUTED, margin: 0 });
     }
   });
-  function y_step() { return 2.35; }
 
   s.addText("בדיקת ה-Diff היא לא אופציונלית — זה השלב שבו אתם עדיין בשליטה", {
     x: 0.6, y: 4.4, w: 12.13, h: 0.5, align: "right",
@@ -196,11 +266,11 @@ function iconCircle(slide, x, y, d, label, fillColor, textColor) {
     x: 0.6, y: 5.4, w: 12.13, h: 0.5, align: "right",
     fontFace: TITLE_FONT, bold: true, fontSize: 16, color: TEAL, rtlMode: true, margin: 0,
   });
-  addFooter(s, 4);
+  addFooter(s, 6);
 }
 
 // =====================================================================
-// SLIDE 5 — אתם כבר עובדים ליד AI
+// SLIDE 7 — אתם כבר עובדים ליד AI
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -221,11 +291,49 @@ function iconCircle(slide, x, y, d, label, fillColor, textColor) {
     x: 0.9, y: 4.4, w: 11.53, h: 1.3, align: "right", valign: "middle",
     fontFace: TITLE_FONT, bold: true, italic: true, fontSize: 18, color: TEAL, rtlMode: true, margin: 0,
   });
-  addFooter(s, 5);
+  addFooter(s, 7);
 }
 
 // =====================================================================
-// SLIDE 6 — כלים חינמיים
+// SLIDE 8 — מי משתמש במה
+// =====================================================================
+{
+  const s = pres.addSlide();
+  s.background = { color: WHITE };
+  addSlideTitle(s, "מי משתמש במה, בפועל");
+
+  const rows = [
+    { name: "ChatGPT", general: "82%", primary: "—" },
+    { name: "GitHub Copilot", general: "68%", primary: "—" },
+    { name: "Cursor", general: "18%", primary: "24%" },
+    { name: "Claude Code", general: "10%", primary: "28%" },
+  ];
+  const headerY = 1.8;
+  s.addText("כלי", { x: 8.5, y: headerY, w: 3.0, h: 0.5, align: "right", fontFace: TITLE_FONT, bold: true, fontSize: 14, color: MUTED, rtlMode: true, margin: 0 });
+  s.addText("נתח שימוש כללי", { x: 4.5, y: headerY, w: 3.7, h: 0.5, align: "center", fontFace: TITLE_FONT, bold: true, fontSize: 14, color: MUTED, rtlMode: true, margin: 0 });
+  s.addText("ככלי ראשי (Agentic)", { x: 0.6, y: headerY, w: 3.7, h: 0.5, align: "center", fontFace: TITLE_FONT, bold: true, fontSize: 14, color: MUTED, rtlMode: true, margin: 0 });
+
+  rows.forEach((r, i) => {
+    const y = 2.4 + i * 0.85;
+    const highlight = r.name === "Claude Code";
+    if (highlight) {
+      s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: y - 0.08, w: 11.73, h: 0.75, rectRadius: 0.08, fill: { color: TEAL_TINT }, line: { type: "none" } });
+    }
+    s.addText(r.name, { x: 8.5, y, w: 3.0, h: 0.6, align: "right", valign: "middle", fontFace: TITLE_FONT, bold: true, fontSize: 15, color: TEXT_DARK, rtlMode: true, margin: 0 });
+    s.addText(r.general, { x: 4.5, y, w: 3.7, h: 0.6, align: "center", valign: "middle", fontFace: TITLE_FONT, fontSize: 15, color: TEXT_DARK, margin: 0 });
+    s.addText(r.primary, { x: 0.6, y, w: 3.7, h: 0.6, align: "center", valign: "middle", fontFace: TITLE_FONT, bold: highlight, fontSize: 15, color: highlight ? TEAL : TEXT_DARK, margin: 0 });
+  });
+
+  s.addText("אין \"כלי אחד נכון\" — יש כלי נגיש, ויש כלי שמוביל בקרב מומחים", {
+    x: 0.6, y: 6.05, w: 12.13, h: 0.5, align: "right",
+    fontFace: TITLE_FONT, bold: true, italic: true, fontSize: 14, color: TEXT_DARK, rtlMode: true, margin: 0,
+  });
+  addSourceCaption(s, "מקור: Stack Overflow Developer Survey 2025 · index.dev 2026");
+  addFooter(s, 8);
+}
+
+// =====================================================================
+// SLIDE 9 — כלים חינמיים
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -251,11 +359,11 @@ function iconCircle(slide, x, y, d, label, fillColor, textColor) {
     x: 0.9, y: 4.85, w: 10.2, h: 0.8, align: "right", valign: "middle",
     fontFace: TITLE_FONT, bold: true, fontSize: 14, color: TEXT_DARK, rtlMode: true, margin: 0,
   });
-  addFooter(s, 6);
+  addFooter(s, 9);
 }
 
 // =====================================================================
-// SLIDE 7 — Best Practices (1)
+// SLIDE 10 — Best Practices (1)
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -273,11 +381,11 @@ function iconCircle(slide, x, y, d, label, fillColor, textColor) {
     s.addText(r.h, { x: 0.6, y, w: 10.4, h: 0.4, align: "right", fontFace: TITLE_FONT, bold: true, fontSize: 18, color: TEXT_DARK, rtlMode: true, margin: 0 });
     s.addText(r.d, { x: 0.6, y: y + 0.42, w: 10.4, h: 0.8, align: "right", fontFace: BODY_FONT, fontSize: 14, color: MUTED, rtlMode: true, margin: 0 });
   });
-  addFooter(s, 7);
+  addFooter(s, 10);
 }
 
 // =====================================================================
-// SLIDE 8 — Best Practices (2)
+// SLIDE 11 — Best Practices (2)
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -295,11 +403,39 @@ function iconCircle(slide, x, y, d, label, fillColor, textColor) {
     s.addText(r.h, { x: 0.6, y, w: 10.4, h: 0.4, align: "right", fontFace: TITLE_FONT, bold: true, fontSize: 18, color: TEXT_DARK, rtlMode: true, margin: 0 });
     s.addText(r.d, { x: 0.6, y: y + 0.42, w: 10.4, h: 0.8, align: "right", fontFace: BODY_FONT, fontSize: 14, color: MUTED, rtlMode: true, margin: 0 });
   });
-  addFooter(s, 8);
+  addFooter(s, 11);
 }
 
 // =====================================================================
-// SLIDE 9 — הדגמה חיה
+// SLIDE 12 — המחיר של דילוג על הכללים
+// =====================================================================
+{
+  const s = pres.addSlide();
+  s.background = { color: DARK };
+
+  s.addText("המחיר של דילוג על הכללים", {
+    x: 0.6, y: 0.5, w: 12.13, h: 0.7, align: "right",
+    fontFace: TITLE_FONT, bold: true, fontSize: 28, color: WHITE, rtlMode: true, margin: 0,
+  });
+
+  s.addShape(pres.ShapeType.roundRect, { x: 6.93, y: 1.7, w: 5.6, h: 2.8, rectRadius: 0.12, fill: { color: DARK2 }, line: { type: "none" } });
+  s.addText("30-41%", { x: 6.93, y: 1.85, w: 5.6, h: 1.3, align: "center", fontFace: TITLE_FONT, bold: true, fontSize: 44, color: WARN, margin: 0 });
+  s.addText("יותר חוב טכני כשאין תהליך מסודר", { x: 7.2, y: 3.1, w: 5.1, h: 1.2, align: "center", fontFace: BODY_FONT, fontSize: 14, color: WHITE, rtlMode: true, margin: 0 });
+
+  s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 1.7, w: 5.6, h: 2.8, rectRadius: 0.12, fill: { color: TEAL }, line: { type: "none" } });
+  s.addText("1.7x", { x: 0.6, y: 1.85, w: 5.6, h: 1.3, align: "center", fontFace: TITLE_FONT, bold: true, fontSize: 44, color: DARK, margin: 0 });
+  s.addText("יותר בעיות ב-PR שנכתב ב-AI לעומת PR אנושי", { x: 0.85, y: 3.1, w: 5.1, h: 1.2, align: "center", fontFace: BODY_FONT, fontSize: 14, color: DARK, rtlMode: true, margin: 0 });
+
+  s.addText("ה-Best Practices האלה הם לא בירוקרטיה — הם ההבדל בין \"AI שעוזר\" ל\"AI שיוצר בעיה גדולה יותר\".", {
+    x: 0.6, y: 4.9, w: 12.13, h: 0.9, align: "right",
+    fontFace: TITLE_FONT, bold: true, italic: true, fontSize: 17, color: WHITE, rtlMode: true, margin: 0,
+  });
+  addSourceCaption(s, "מקור: DORA — ROI of AI-Assisted Software Development, 2026");
+  addFooter(s, 12, true);
+}
+
+// =====================================================================
+// SLIDE 13 — הדגמה חיה
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -308,11 +444,11 @@ function iconCircle(slide, x, y, d, label, fillColor, textColor) {
   s.addText("פותחים session אמיתי על פרויקט קיים", { x: 0.6, y: 1.2, w: 12.13, h: 1.2, align: "center", fontFace: TITLE_FONT, bold: true, fontSize: 34, color: WHITE, rtlMode: true, margin: 0 });
   s.addText("ראו demo/prompt.md להוראות המלאות", { x: 0.6, y: 2.35, w: 12.13, h: 0.5, align: "center", fontFace: BODY_FONT, italic: true, fontSize: 15, color: ICE, rtlMode: true, margin: 0 });
   addImagePlaceholder(s, 3.5, 3.15, 6.33, 3.6, "[תמונה: מסך שיתוף — Diff מוצג לפני אישור בכלי ה-AI]", true);
-  addFooter(s, 9, true);
+  addFooter(s, 13, true);
 }
 
 // =====================================================================
-// SLIDE 9 — עוברים לתרגול
+// SLIDE 14 — עוברים לתרגול
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -334,7 +470,7 @@ function iconCircle(slide, x, y, d, label, fillColor, textColor) {
 }
 
 // =====================================================================
-// SLIDE 10 — סיכום
+// SLIDE 15 — סיכום
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -355,6 +491,32 @@ function iconCircle(slide, x, y, d, label, fillColor, textColor) {
   s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 5.6, w: 12.13, h: 1.3, rectRadius: 0.1, fill: { color: TEAL }, line: { type: "none" } });
   s.addText("שבוע הבא", { x: 0.9, y: 5.78, w: 11.53, h: 0.4, align: "right", fontFace: BODY_FONT, italic: true, fontSize: 13, color: DARK, rtlMode: true, margin: 0 });
   s.addText("Context Engineering — איך ״מזינים״ לכלי את מה שהוא צריך לדעת", { x: 0.9, y: 6.15, w: 11.53, h: 0.6, align: "right", fontFace: TITLE_FONT, bold: true, fontSize: 18, color: WHITE, rtlMode: true, margin: 0 });
+}
+
+// =====================================================================
+// SLIDE 16 — מקורות
+// =====================================================================
+{
+  const s = pres.addSlide();
+  s.background = { color: WHITE };
+  addSlideTitle(s, "מקורות");
+
+  s.addText(
+    [
+      { text: "Kinsta & Skillademia — GitHub Statistics 2026", options: { breakLine: true } },
+      { text: "DigitalApplied & MorphLLM — Benchmark Guides 2026 (SWE-bench, Terminal-Bench)", options: { breakLine: true } },
+      { text: "Stack Overflow Developer Survey 2025", options: { breakLine: true } },
+      { text: "index.dev — Developer Productivity Statistics 2026", options: { breakLine: true } },
+      { text: "DORA — ROI of AI-Assisted Software Development, 2026", options: { breakLine: false } },
+    ],
+    { x: 0.6, y: 1.8, w: 12.13, h: 3.0, align: "right", fontFace: BODY_FONT, fontSize: 16, color: TEXT_DARK, rtlMode: true, paraSpaceAfter: 14, margin: 0 }
+  );
+
+  s.addText("פירוט מלא וקישורים: references.md — כל הנתונים נבדקו ביולי 2026 ועשויים להשתנות", {
+    x: 0.6, y: 5.7, w: 12.13, h: 0.6, align: "right",
+    fontFace: BODY_FONT, italic: true, fontSize: 13, color: MUTED, rtlMode: true, margin: 0,
+  });
+  addFooter(s, 16);
 }
 
 // =====================================================================
