@@ -50,6 +50,24 @@ function bulletRuns(bullets, base = {}) {
   return out;
 }
 
+// בונה מערך ריצות טקסט עבור כמה פסקאות, עם שורה ריקה מפרידה ביניהן
+// (בלי בולטים - לתיבת "טקסט מלא להקלדה", כמו פרומפט)
+function paragraphRuns(paragraphs, base = {}) {
+  const out = [];
+  paragraphs.forEach((p, i) => {
+    const r = runs(p, base);
+    r[r.length - 1] = {
+      ...r[r.length - 1],
+      options: { ...r[r.length - 1].options, breakLine: true },
+    };
+    out.push(...r);
+    if (i < paragraphs.length - 1) {
+      out.push({ text: "", options: { ...base, rtlMode: true, breakLine: true } });
+    }
+  });
+  return out;
+}
+
 // ---------- בלוקים בסיסיים ----------
 function addTitle(slide, text) {
   slide.addText(text, {
@@ -482,12 +500,52 @@ contentSlide({
 // =====================================================================
 // שקף 19 — הדגמה חיה
 // =====================================================================
-milestoneSlide({
-  eyebrow: "הדגמה חיה",
-  title: "20 דקות. בונים יחד, בזמן אמת.",
-  sub: "ראו demo/prompt.md להוראות המלאות, לפי ה-Workflow שלמדנו",
-  image: "[תמונה: מסך שיתוף / הקלטת מסך של סוכן AI בונה קוד בזמן אמת]",
-});
+{
+  const s = pres.addSlide();
+  s.background = { color: WHITE };
+
+  s.addText("הדגמה חיה", {
+    x: 0.6, y: 0.5, w: 12.13, h: 0.4, align: "center",
+    fontFace: BODY_FONT, italic: true, fontSize: 15, color: TEAL, rtlMode: true, margin: 0,
+  });
+  s.addShape(pres.ShapeType.line, { x: 5.16, y: 0.95, w: 3.0, h: 0, line: { color: TEAL, width: 1.5 } });
+  s.addText("20 דקות. בונים יחד, בזמן אמת.", {
+    x: 0.6, y: 1.1, w: 12.13, h: 0.65, align: "center",
+    fontFace: TITLE_FONT, bold: true, fontSize: 28, color: TEXT_DARK, rtlMode: true, margin: 0,
+  });
+  s.addText("הפרומפט הראשון להקלדה חיה מול הכיתה, לפי ה-Workflow שלמדנו:", {
+    x: 0.6, y: 1.75, w: 12.13, h: 0.4, align: "center",
+    fontFace: BODY_FONT, italic: true, fontSize: 15, color: MUTED, rtlMode: true, margin: 0,
+  });
+
+  // תיבת "פרומפט" - הטקסט המדויק להקלדה, לא placeholder
+  const promptBoxY = 2.35;
+  const promptBoxH = 3.55;
+  s.addShape(pres.ShapeType.rect, {
+    x: 1.3, y: promptBoxY, w: 10.73, h: promptBoxH,
+    fill: { color: PH_BG },
+    line: { color: PH_BORDER, width: 1 },
+  });
+  s.addText(
+    paragraphRuns(
+      [
+        "בוא נבנה יחד, שלב אחר שלב, אפליקציית Note-Taking פשוטה שרצה בדפדפן — קובץ HTML יחיד עם CSS ו-JS מוטמעים, בלי שרת.",
+        "שלב 1: תתחיל רק במבנה הבסיסי — אזור טקסט לכתיבת פתק חדש, וכפתור שמירה. אחרי שאני מאשר, נמשיך לשלב הבא (הצגת רשימת הפתקים שנשמרו).",
+      ],
+      { fontFace: "Courier New", fontSize: 15, color: TEXT_DARK }
+    ),
+    { x: 1.65, y: promptBoxY + 0.3, w: 10.03, h: promptBoxH - 0.6, align: "right", valign: "top", rtlMode: true, margin: 0 }
+  );
+
+  s.addText(
+    "שני הפרומפטים הבאים בהדגמה (הצגת הפתקים שנשמרו, וחיפוש חופשי) — בקובץ demo/prompt.md",
+    {
+      x: 0.6, y: promptBoxY + promptBoxH + 0.15, w: 12.13, h: 0.4, align: "center",
+      fontFace: BODY_FONT, italic: true, fontSize: 12, color: MUTED, rtlMode: true, margin: 0,
+    }
+  );
+  addFooter(s);
+}
 
 // =====================================================================
 // שקף 20 — עוברים לתרגול
