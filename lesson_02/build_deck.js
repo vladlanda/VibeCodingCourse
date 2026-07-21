@@ -93,7 +93,7 @@ function conceptSlide(n, title, bullets, imgLabel, opts = {}) {
   addSlideTitle(s, title);
 
   s.addText(
-    bullets.map((b, i) => ({ text: "• " + b, options: { breakLine: i < bullets.length - 1 } })),
+    bullets.map((b, i) => ({ text: "• " + b, options: { rtlMode: true, breakLine: i < bullets.length - 1 } })),
     { x: 0.6, y: 1.9, w: 12.13, h: 3.0, align: "right", fontFace: BODY_FONT, fontSize: opts.fontSize || 17, color: TEXT_DARK, rtlMode: true, paraSpaceAfter: 14, margin: 0 }
   );
 
@@ -123,10 +123,10 @@ function conceptSlide(n, title, bullets, imgLabel, opts = {}) {
   });
   s.addText(
     [
-      { text: "• מה זה IDE, Git, GitHub — ולמה צריך כל אחד מהם?", options: { breakLine: true } },
-      { text: "• מה ההבדל בין כלי Autocomplete לכלי Agentic?", options: { breakLine: true } },
-      { text: "• איך פותחים ומנהלים session עם Claude Code בפועל?", options: { breakLine: true } },
-      { text: "• אילו כלי AI חינמיים זמינים כדי להתחיל בלי תקציב?", options: { breakLine: false } },
+      { text: "• מה זה IDE, Git, GitHub — ולמה צריך כל אחד מהם?", options: { rtlMode: true, breakLine: true } },
+      { text: "• מה ההבדל בין כלי Autocomplete לכלי Agentic?", options: { rtlMode: true, breakLine: true } },
+      { text: "• איך פותחים ומנהלים session עם Claude Code בפועל?", options: { rtlMode: true, breakLine: true } },
+      { text: "• אילו כלי AI חינמיים זמינים כדי להתחיל בלי תקציב?", options: { rtlMode: true, breakLine: false } },
     ],
     { x: 0.6, y: 3.5, w: 6.2, h: 2.6, align: "right", fontFace: BODY_FONT, fontSize: 14, color: ICE, rtlMode: true, paraSpaceAfter: 10, margin: 0 }
   );
@@ -256,10 +256,10 @@ conceptSlide(
   s.addText("כלי Agentic (Claude Code)", { x: 0.9, y: 2.15, w: 5.0, h: 0.5, align: "right", fontFace: TITLE_FONT, bold: true, fontSize: 18, color: TEAL, rtlMode: true, margin: 0 });
   s.addText(
     [
-      { text: "• מקבל משימה ברמה גבוהה", options: { breakLine: true } },
-      { text: "• קורא קבצים, כותב במספר מקומות", options: { breakLine: true } },
-      { text: "• מריץ בדיקות ומתקן את עצמו", options: { breakLine: true } },
-      { text: "• שותף לביצוע משימה", options: { breakLine: false } },
+      { text: "• מקבל משימה ברמה גבוהה", options: { rtlMode: true, breakLine: true } },
+      { text: "• קורא קבצים, כותב במספר מקומות", options: { rtlMode: true, breakLine: true } },
+      { text: "• מריץ בדיקות ומתקן את עצמו", options: { rtlMode: true, breakLine: true } },
+      { text: "• שותף לביצוע משימה", options: { rtlMode: true, breakLine: false } },
     ],
     { x: 0.9, y: 2.75, w: 5.0, h: 2.9, align: "right", fontFace: BODY_FONT, fontSize: 14, color: TEXT_DARK, rtlMode: true, paraSpaceAfter: 10, margin: 0 }
   );
@@ -267,9 +267,9 @@ conceptSlide(
   s.addText("Autocomplete בסיסי", { x: 7.23, y: 2.15, w: 5.0, h: 0.5, align: "right", fontFace: TITLE_FONT, bold: true, fontSize: 18, color: MUTED, rtlMode: true, margin: 0 });
   s.addText(
     [
-      { text: "• משלים שורה/פונקציה בודדת", options: { breakLine: true } },
-      { text: "• פועל לפי הקשר מקומי בלבד", options: { breakLine: true } },
-      { text: "• אתם מחליטים הכל", options: { breakLine: false } },
+      { text: "• משלים שורה/פונקציה בודדת", options: { rtlMode: true, breakLine: true } },
+      { text: "• פועל לפי הקשר מקומי בלבד", options: { rtlMode: true, breakLine: true } },
+      { text: "• אתם מחליטים הכל", options: { rtlMode: true, breakLine: false } },
     ],
     { x: 7.23, y: 2.75, w: 5.0, h: 2.9, align: "right", fontFace: BODY_FONT, fontSize: 14, color: MUTED, rtlMode: true, paraSpaceAfter: 10, margin: 0 }
   );
@@ -317,7 +317,7 @@ conceptSlide(
     const fill = i === 3 ? WARN_TINT : TEAL_TINT;
     s.addShape(pres.ShapeType.roundRect, { x, y: 2.2, w: 2.15, h: 1.7, rectRadius: 0.1, fill: { color: fill }, line: { type: "none" } });
     iconCircle(s, x + 0.78, 2.35, 0.55, i + 1, i === 3 ? WARN : TEAL, WHITE);
-    s.addText(label, { x, y: 3.15, w: 2.15, h: 0.65, align: "center", valign: "top", fontFace: TITLE_FONT, bold: true, fontSize: 13, color: TEXT_DARK, margin: 2 });
+    s.addText(label, { x, y: 3.15, w: 2.15, h: 0.65, align: "center", valign: "top", fontFace: TITLE_FONT, bold: true, fontSize: 13, color: TEXT_DARK, margin: 2, rtlMode: true });
     if (i < steps.length - 1) {
       s.addText("←", { x: x + 2.15, y: 2.2, w: 0.35, h: 1.7, align: "center", valign: "middle", fontFace: TITLE_FONT, bold: true, fontSize: 20, color: MUTED, margin: 0 });
     }
@@ -344,9 +344,9 @@ conceptSlide(
 
   s.addText(
     [
-      { text: "• רובכם כבר משתמשים ב-ChatGPT/Claude לכתיבת קוד עזר למחקר", options: { breakLine: true } },
-      { text: "• מה עשיתם עם הקוד שקיבלתם? העתקתם-הדבקתם לקובץ", options: { breakLine: true } },
-      { text: "• כלי אג'נטי עושה בדיוק את זה — רק כותב ישירות, וקורא את הפרויקט קודם", options: { breakLine: false } },
+      { text: "• רובכם כבר משתמשים ב-ChatGPT/Claude לכתיבת קוד עזר למחקר", options: { rtlMode: true, breakLine: true } },
+      { text: "• מה עשיתם עם הקוד שקיבלתם? העתקתם-הדבקתם לקובץ", options: { rtlMode: true, breakLine: true } },
+      { text: "• כלי אג'נטי עושה בדיוק את זה — רק כותב ישירות, וקורא את הפרויקט קודם", options: { rtlMode: true, breakLine: false } },
     ],
     { x: 0.6, y: 1.9, w: 12.13, h: 2.2, align: "right", fontFace: BODY_FONT, fontSize: 17, color: TEXT_DARK, rtlMode: true, paraSpaceAfter: 14, margin: 0 }
   );
@@ -385,8 +385,8 @@ conceptSlide(
       s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: y - 0.08, w: 11.73, h: 0.75, rectRadius: 0.08, fill: { color: TEAL_TINT }, line: { type: "none" } });
     }
     s.addText(r.name, { x: 8.5, y, w: 3.0, h: 0.6, align: "right", valign: "middle", fontFace: TITLE_FONT, bold: true, fontSize: 15, color: TEXT_DARK, rtlMode: true, margin: 0 });
-    s.addText(r.general, { x: 4.5, y, w: 3.7, h: 0.6, align: "center", valign: "middle", fontFace: TITLE_FONT, fontSize: 15, color: TEXT_DARK, margin: 0 });
-    s.addText(r.primary, { x: 0.6, y, w: 3.7, h: 0.6, align: "center", valign: "middle", fontFace: TITLE_FONT, bold: highlight, fontSize: 15, color: highlight ? TEAL : TEXT_DARK, margin: 0 });
+    s.addText(r.general, { x: 4.5, y, w: 3.7, h: 0.6, align: "center", valign: "middle", fontFace: TITLE_FONT, fontSize: 15, color: TEXT_DARK, margin: 0, rtlMode: true });
+    s.addText(r.primary, { x: 0.6, y, w: 3.7, h: 0.6, align: "center", valign: "middle", fontFace: TITLE_FONT, bold: highlight, fontSize: 15, color: highlight ? TEAL : TEXT_DARK, margin: 0, rtlMode: true });
   });
 
   s.addText("אין \"כלי אחד נכון\" — יש כלי נגיש, ויש כלי שמוביל בקרב מומחים", {
@@ -484,11 +484,11 @@ conceptSlide(
   });
 
   s.addShape(pres.ShapeType.roundRect, { x: 6.93, y: 1.7, w: 5.6, h: 2.8, rectRadius: 0.12, fill: { color: DARK2 }, line: { type: "none" } });
-  s.addText("30-41%", { x: 6.93, y: 1.85, w: 5.6, h: 1.3, align: "center", fontFace: TITLE_FONT, bold: true, fontSize: 44, color: WARN, margin: 0 });
+  s.addText("30-41%", { x: 6.93, y: 1.85, w: 5.6, h: 1.3, align: "center", fontFace: TITLE_FONT, bold: true, fontSize: 44, color: WARN, margin: 0, rtlMode: true });
   s.addText("יותר חוב טכני כשאין תהליך מסודר", { x: 7.2, y: 3.1, w: 5.1, h: 1.2, align: "center", fontFace: BODY_FONT, fontSize: 14, color: WHITE, rtlMode: true, margin: 0 });
 
   s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 1.7, w: 5.6, h: 2.8, rectRadius: 0.12, fill: { color: TEAL }, line: { type: "none" } });
-  s.addText("1.7x", { x: 0.6, y: 1.85, w: 5.6, h: 1.3, align: "center", fontFace: TITLE_FONT, bold: true, fontSize: 44, color: DARK, margin: 0 });
+  s.addText("1.7x", { x: 0.6, y: 1.85, w: 5.6, h: 1.3, align: "center", fontFace: TITLE_FONT, bold: true, fontSize: 44, color: DARK, margin: 0, rtlMode: true });
   s.addText("יותר בעיות ב-PR שנכתב ב-AI לעומת PR אנושי", { x: 0.85, y: 3.1, w: 5.1, h: 1.2, align: "center", fontFace: BODY_FONT, fontSize: 14, color: DARK, rtlMode: true, margin: 0 });
 
   s.addText("ה-Best Practices האלה הם לא בירוקרטיה — הם ההבדל בין \"AI שעוזר\" ל\"AI שיוצר בעיה גדולה יותר\".", {
@@ -505,7 +505,7 @@ conceptSlide(
 {
   const s = pres.addSlide();
   s.background = { color: DARK };
-  s.addText("הדגמה חיה", { x: 0.6, y: 0.5, w: 12.13, h: 0.6, align: "center", fontFace: BODY_FONT, italic: true, fontSize: 16, color: TEAL, margin: 0 });
+  s.addText("הדגמה חיה", { x: 0.6, y: 0.5, w: 12.13, h: 0.6, align: "center", fontFace: BODY_FONT, italic: true, fontSize: 16, color: TEAL, margin: 0, rtlMode: true });
   s.addText("פותחים session אמיתי על פרויקט קיים", { x: 0.6, y: 1.2, w: 12.13, h: 1.2, align: "center", fontFace: TITLE_FONT, bold: true, fontSize: 34, color: WHITE, rtlMode: true, margin: 0 });
   s.addText("ראו demo/prompt.md להוראות המלאות", { x: 0.6, y: 2.35, w: 12.13, h: 0.5, align: "center", fontFace: BODY_FONT, italic: true, fontSize: 15, color: ICE, rtlMode: true, margin: 0 });
   addImagePlaceholder(s, 3.5, 3.15, 6.33, 3.6, "[תמונה: מסך שיתוף — Diff מוצג לפני אישור בכלי ה-AI]", true);
@@ -518,15 +518,15 @@ conceptSlide(
 {
   const s = pres.addSlide();
   s.background = { color: TEAL };
-  s.addText("עוברים לתרגול", { x: 0.6, y: 0.6, w: 12.13, h: 0.6, align: "center", fontFace: BODY_FONT, italic: true, fontSize: 16, color: DARK, margin: 0 });
+  s.addText("עוברים לתרגול", { x: 0.6, y: 0.6, w: 12.13, h: 0.6, align: "center", fontFace: BODY_FONT, italic: true, fontSize: 16, color: DARK, margin: 0, rtlMode: true });
   s.addText("45 דקות: הקמת סביבת עבודה", { x: 0.6, y: 1.3, w: 12.13, h: 1.1, align: "center", fontFace: TITLE_FONT, bold: true, fontSize: 32, color: WHITE, rtlMode: true, margin: 0 });
 
   s.addText(
     [
-      { text: "• VS Code + Git מותקנים", options: { breakLine: true } },
-      { text: "• Repository חדש ב-GitHub", options: { breakLine: true } },
-      { text: "• כלי AI חינמי מחובר", options: { breakLine: true } },
-      { text: "• Commit ראשון נדחף בהצלחה", options: { breakLine: false } },
+      { text: "• VS Code + Git מותקנים", options: { rtlMode: true, breakLine: true } },
+      { text: "• Repository חדש ב-GitHub", options: { rtlMode: true, breakLine: true } },
+      { text: "• כלי AI חינמי מחובר", options: { rtlMode: true, breakLine: true } },
+      { text: "• Commit ראשון נדחף בהצלחה", options: { rtlMode: true, breakLine: false } },
     ],
     { x: 0.9, y: 2.9, w: 5.6, h: 2.2, align: "right", fontFace: BODY_FONT, fontSize: 16, color: WHITE, rtlMode: true, paraSpaceAfter: 10, margin: 0 }
   );
@@ -568,11 +568,11 @@ conceptSlide(
 
   s.addText(
     [
-      { text: "Kinsta & Skillademia — GitHub Statistics 2026", options: { breakLine: true } },
-      { text: "DigitalApplied & MorphLLM — Benchmark Guides 2026 (SWE-bench, Terminal-Bench)", options: { breakLine: true } },
-      { text: "Stack Overflow Developer Survey 2025", options: { breakLine: true } },
-      { text: "index.dev — Developer Productivity Statistics 2026", options: { breakLine: true } },
-      { text: "DORA — ROI of AI-Assisted Software Development, 2026", options: { breakLine: false } },
+      { text: "Kinsta & Skillademia — GitHub Statistics 2026", options: { rtlMode: true, breakLine: true } },
+      { text: "DigitalApplied & MorphLLM — Benchmark Guides 2026 (SWE-bench, Terminal-Bench)", options: { rtlMode: true, breakLine: true } },
+      { text: "Stack Overflow Developer Survey 2025", options: { rtlMode: true, breakLine: true } },
+      { text: "index.dev — Developer Productivity Statistics 2026", options: { rtlMode: true, breakLine: true } },
+      { text: "DORA — ROI of AI-Assisted Software Development, 2026", options: { rtlMode: true, breakLine: false } },
     ],
     { x: 0.6, y: 1.8, w: 12.13, h: 3.0, align: "right", fontFace: BODY_FONT, fontSize: 16, color: TEXT_DARK, rtlMode: true, paraSpaceAfter: 14, margin: 0 }
   );

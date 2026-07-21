@@ -18,13 +18,20 @@ const LESSON_LABEL = "שיעור 1";
 let SLIDE_NUM = 0;
 
 // ---------- טקסט עשיר: פירוק **בולד** לריצות טקסט ----------
+// הערה קריטית: כש-addText מקבל מערך של ריצות טקסט (rich text), pptxgenjs
+// קורא rtlMode אך ורק מתוך options של הריצה הראשונה במערך (line[0].options.rtlMode) -
+// לא מתוך ה-options הכלליים שמועברים ל-addText עצמו. לכן rtlMode:true חייב
+// להיות בתוך base כאן, אחרת כל טקסט שמורכב מכמה ריצות (כל בולט, כל שאלה,
+// כל "מה עושים בפועל") ייצא ללא rtl="1" ב-XML ויוצג LTR ב-PowerPoint,
+// גם אם ב-LibreOffice/QA זה נראה תקין (מזהה RTL אוטומטית לפי התווים).
 function runs(text, base = {}) {
+  const merged = { rtlMode: true, ...base };
   const parts = text.split(/(\*\*[^*]+\*\*)/g).filter((p) => p.length > 0);
   return parts.map((p) => {
     if (p.startsWith("**") && p.endsWith("**")) {
-      return { text: p.slice(2, -2), options: { ...base, bold: true } };
+      return { text: p.slice(2, -2), options: { ...merged, bold: true } };
     }
-    return { text: p, options: { ...base } };
+    return { text: p, options: { ...merged } };
   });
 }
 
@@ -138,7 +145,7 @@ function milestoneSlide({ eyebrow, title, sub, bullets, image }) {
   s.background = { color: WHITE };
   s.addText(eyebrow, {
     x: 0.6, y: 0.7, w: 12.13, h: 0.4, align: "center",
-    fontFace: BODY_FONT, italic: true, fontSize: 15, color: TEAL, margin: 0,
+    fontFace: BODY_FONT, italic: true, fontSize: 15, color: TEAL, rtlMode: true, margin: 0,
   });
   s.addShape(pres.ShapeType.line, { x: 5.16, y: 1.15, w: 3.0, h: 0, line: { color: TEAL, width: 1.5 } });
   s.addText(title, {
@@ -406,7 +413,7 @@ contentSlide({
 function bulletRunsPlain(lines) {
   const out = [];
   lines.forEach((l, i) => {
-    out.push({ text: l, options: { breakLine: i < lines.length - 1 } });
+    out.push({ text: l, options: { rtlMode: true, breakLine: i < lines.length - 1 } });
   });
   return out;
 }
@@ -508,7 +515,7 @@ milestoneSlide({
   s.addText(
     takeaways.map((t, i) => ({
       text: `${i + 1}. ${t}`,
-      options: { breakLine: i < takeaways.length - 1 },
+      options: { rtlMode: true, breakLine: i < takeaways.length - 1 },
     })),
     {
       x: 0.6, y: 1.5, w: 12.13, h: 3.0, align: "right", rtlMode: true,
