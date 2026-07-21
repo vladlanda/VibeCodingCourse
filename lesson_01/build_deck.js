@@ -53,14 +53,14 @@ function addTitle(slide, text) {
 }
 
 function addQuestion(slide, text, y = 1.12) {
-  slide.addText(runs(text, { fontFace: BODY_FONT, fontSize: 15, italic: true, color: MUTED }), {
+  slide.addText(runs(text, { fontFace: BODY_FONT, fontSize: 17, italic: true, color: MUTED }), {
     x: 0.6, y, w: 12.13, h: 0.45,
     align: "right", rtlMode: true, margin: 0,
   });
 }
 
 function addBullets(slide, bullets, y = 1.65, h = 2.6, opts = {}) {
-  slide.addText(bulletRuns(bullets, { fontFace: BODY_FONT, fontSize: opts.fontSize || 16, color: TEXT_DARK }), {
+  slide.addText(bulletRuns(bullets, { fontFace: BODY_FONT, fontSize: opts.fontSize || 19, color: TEXT_DARK }), {
     x: 0.6, y, w: 12.13, h,
     align: "right", rtlMode: true, paraSpaceAfter: 10, margin: 0,
   });
@@ -72,8 +72,8 @@ function addBestPractice(slide, text, y) {
     x: 0.6, y, w: 12.13, h: 0, line: { color: PH_BORDER, width: 0.75 },
   });
   const withLabel = "✔ מה עושים בפועל: " + text;
-  slide.addText(runs(withLabel, { fontFace: TITLE_FONT, fontSize: 15, color: TEAL }), {
-    x: 0.6, y: y + 0.1, w: 12.13, h: 0.85,
+  slide.addText(runs(withLabel, { fontFace: TITLE_FONT, fontSize: 17, color: TEAL }), {
+    x: 0.6, y: y + 0.1, w: 12.13, h: 0.95,
     align: "right", rtlMode: true, margin: 0,
   });
 }
@@ -87,7 +87,7 @@ function addImagePlaceholder(slide, x, y, w, h, label) {
   slide.addText(label, {
     x, y, w, h, margin: 8,
     align: "center", valign: "middle",
-    fontFace: BODY_FONT, fontSize: 12, italic: true, color: MUTED, rtlMode: true,
+    fontFace: BODY_FONT, fontSize: 13, italic: true, color: MUTED, rtlMode: true,
   });
 }
 
@@ -148,11 +148,11 @@ function milestoneSlide({ eyebrow, title, sub, bullets, image }) {
   if (sub) {
     s.addText(sub, {
       x: 0.6, y: 2.35, w: 12.13, h: 0.5, align: "center",
-      fontFace: BODY_FONT, italic: true, fontSize: 14, color: MUTED, rtlMode: true, margin: 0,
+      fontFace: BODY_FONT, italic: true, fontSize: 15, color: MUTED, rtlMode: true, margin: 0,
     });
   }
   if (bullets) {
-    s.addText(bulletRuns(bullets, { fontFace: BODY_FONT, fontSize: 16, color: TEXT_DARK }), {
+    s.addText(bulletRuns(bullets, { fontFace: BODY_FONT, fontSize: 18, color: TEXT_DARK }), {
       x: 2.5, y: 3.1, w: 8.33, h: 2.0, align: "right", rtlMode: true, paraSpaceAfter: 8, margin: 0,
     });
   }
@@ -193,7 +193,7 @@ function milestoneSlide({ eyebrow, title, sub, bullets, image }) {
         "מהו ה-Workflow בן 10 השלבים שנלמד לאורך כל הקורס?",
         "למה הקורס מלמד ״תהליך״, ולא ״כלי״?",
       ],
-      { fontFace: BODY_FONT, fontSize: 15, color: TEXT_DARK }
+      { fontFace: BODY_FONT, fontSize: 17, color: TEXT_DARK }
     ),
     { x: 2.5, y: 3.5, w: 8.33, h: 2.0, align: "right", rtlMode: true, paraSpaceAfter: 8, margin: 0 }
   );
@@ -259,7 +259,7 @@ contentSlide({
   bullets: [
     "**92.6%** מהמפתחים משתמשים בכלי AI לפחות פעם בחודש",
     "**26.9%** מקוד הפרודקשן בתעשייה נכתב היום על ידי AI",
-    "**1,000+** Pull Requests בשבוע דרך מערכת \"Minions\" הפנימית של Stripe",
+    "**1,000+** בקשות שילוב קוד (Pull Requests) בשבוע דרך מערכת \"Minions\" הפנימית של Stripe",
     "**40%** מהאפליקציות הארגוניות — סוכני AI אוטונומיים עד סוף 2026 (מ-5% ב-2025, Deloitte)",
   ],
   bestPractice: "זו כבר לא \"טכנולוגיה חדשה שכדאי להכיר\" — זו התשתית שרוב התעשייה כבר עובדת איתה.",
@@ -273,10 +273,11 @@ contentSlide({
   title: "Evolution of Software Development",
   question: "השאלה: למה בכלל ללמוד היסטוריה של כלים בשיעור על AI?",
   bullets: [
-    "קוד מכונה → שפות עיליות → IDE + Autocomplete → Git → **AI Agentic**",
-    "כל קפיצה שינתה מה נחשב \"עבודה של מפתח\" — ולא נעצרה",
+    "**התשובה:** כי ההיסטוריה מראה שהקצב שבו כלים מתחלפים הולך ומואץ — וזו בדיוק הסיבה שהקורס מלמד תהליך עבודה (Workflow), לא כלי ספציפי אחד",
+    "קוד מכונה → שפות עיליות (כמו Python) → IDE + Autocomplete → Git → **AI Agentic**",
+    "כל קפיצה שינתה מה נחשב \"עבודה של מפתח\" — ולא נעצרה. את IDE, Git ו-Autocomplete נסביר לעומק בשיעור הבא",
   ],
-  bestPractice: "לומדים את התהליך (Workflow), לא רק את הכלי הנוכחי — כי הקפיצה הבאה כבר בדרך.",
+  bestPractice: "לומדים את התהליך, לא רק את הכלי הנוכחי — כי הקפיצה הבאה כבר בדרך. בשקף הבא נראה את הקצב הזה עם תאריכים מדויקים.",
   image: "[תמונה: רצף ויזואלי לכל עידן — כרטיסי ניקוב, IDE ראשון, ממשק Git, סוכן AI]",
 });
 
@@ -372,33 +373,35 @@ contentSlide({
 });
 
 // =====================================================================
-// שקף 13 — Workflow של מפתח מודרני (רשימה ממוספרת פשוטה)
+// שקף 13 — Workflow של מפתח מודרני (חלק א׳: שלבים 1-5)
 // =====================================================================
-{
-  const s = pres.addSlide();
-  s.background = { color: WHITE };
-  addTitle(s, "Workflow של מפתח מודרני");
-  addQuestion(s, "השאלה: אז איך עובדים נכון עם AI, אם לא סומכים על התחושה?");
+contentSlide({
+  title: "Workflow של מפתח מודרני (חלק א׳: שלבים 1-5)",
+  question: "השאלה: אז איך עובדים נכון עם AI, אם לא סומכים על התחושה (כמו שראינו בשקף הקודם)?",
+  bullets: [
+    "**1. הבנת הבעיה** — מבינים מה בדיוק צריך, לפני שנוגעים בקוד בכלל",
+    "**2. Specification** — כותבים מסמך קצר שמתאר מה בונים ולמה",
+    "**3. בניית Context** — אוספים את המידע שה-AI צריך כדי להבין את הפרויקט (קבצים קיימים, מוסכמות, החלטות קודמות)",
+    "**4. תכנון עם AI** — מבקשים מה-AI הצעת תוכנית לפני שהוא כותב שורת קוד אחת",
+    "**5. מימוש עם AI** — ה-AI כותב את הקוד בפועל, לפי התוכנית שאושרה",
+  ],
+  bestPractice: "חמשת השלבים הבאים (6-10) עוסקים בבדיקה ובשילוב הקוד בעולם האמיתי — בשקף הבא.",
+});
 
-  const steps = [
-    "1. הבנת הבעיה", "2. Specification", "3. בניית Context", "4. תכנון עם AI", "5. מימוש עם AI",
-    "6. Code Review", "7. Testing", "8. Commit", "9. Deploy", "10. שיתוף",
-  ];
-  const colA = steps.slice(0, 5);
-  const colB = steps.slice(5, 10);
-  // RTL: העמודה הראשונה בקריאה (1-5) מימין, השנייה (6-10) משמאל
-  s.addText(bulletRunsPlain(colA), {
-    x: 6.73, y: 1.75, w: 5.8, h: 2.6, align: "right", rtlMode: true,
-    fontFace: BODY_FONT, fontSize: 17, color: TEXT_DARK, paraSpaceAfter: 12, margin: 0,
-  });
-  s.addText(bulletRunsPlain(colB), {
-    x: 0.6, y: 1.75, w: 5.8, h: 2.6, align: "right", rtlMode: true,
-    fontFace: BODY_FONT, fontSize: 17, color: TEXT_DARK, paraSpaceAfter: 12, margin: 0,
-  });
-
-  addBestPractice(s, "בכל שיעור מהיום נחזור לרשימה הזו ונעמיק בשלב אחד או שניים ממנה — זהו העיקרון-על של כל הקורס.", 4.7);
-  addFooter(s);
-}
+// =====================================================================
+// שקף 14 — Workflow של מפתח מודרני (חלק ב׳: שלבים 6-10)
+// =====================================================================
+contentSlide({
+  title: "Workflow של מפתח מודרני (חלק ב׳: שלבים 6-10)",
+  bullets: [
+    "**6. Code Review** — קוראים ובודקים כל שורה שה-AI כתב, לפני שהיא נכנסת לפרויקט",
+    "**7. Testing** — מריצים בדיקות אוטומטיות שמוודאות שהקוד באמת עושה מה שהוא אמור",
+    "**8. Commit** — שומרים גרסה מתועדת של השינוי (עם Git — נסביר בשיעור הבא)",
+    "**9. Deploy** — מעלים את הגרסה לסביבה שבה משתמשים אמיתיים יכולים להשתמש בה",
+    "**10. שיתוף** — מציגים ומתעדים את מה שנבנה, לצוות או ללקוח",
+  ],
+  bestPractice: "בכל שיעור מהיום נחזור לרשימה הזו (כל 10 השלבים) ונעמיק בשלב אחד או שניים ממנה — זהו העיקרון-על של כל הקורס.",
+});
 
 function bulletRunsPlain(lines) {
   const out = [];
@@ -409,14 +412,14 @@ function bulletRunsPlain(lines) {
 }
 
 // =====================================================================
-// שקף 14 — גם הנתונים תומכים ב-Workflow
+// שקף 15 — גם הנתונים תומכים ב-Workflow
 // =====================================================================
 contentSlide({
   title: "גם הנתונים תומכים ב-Workflow",
   bullets: [
     "דו\"ח DORA 2026:",
     "קוד קיים (Brownfield) בלי תהליך מסודר: **~10%** שיפור פרודוקטיביות",
-    "אותם כלים, על פרויקט עם Workflow ברור (Greenfield): **35-40%** שיפור",
+    "אותם כלים, על פרויקט חדש שנבנה מאפס (Greenfield) עם Workflow ברור: **35-40%** שיפור",
     "בלי תהליך מסודר: **30-41%** יותר חוב טכני, PR עם AI = **פי 1.7** יותר בעיות",
   ],
   bestPractice: "ההבדל הוא לא הכלי. ההבדל הוא התהליך.",
@@ -424,7 +427,7 @@ contentSlide({
 });
 
 // =====================================================================
-// שקף 15 — מקרה בוחן: Gemini CLI → Antigravity
+// שקף 16 — מקרה בוחן: Gemini CLI → Antigravity
 // =====================================================================
 contentSlide({
   title: "מקרה בוחן: Gemini CLI → Antigravity",
@@ -440,7 +443,7 @@ contentSlide({
 });
 
 // =====================================================================
-// שקף 16 — עוד דוגמה: זה לא רק Google
+// שקף 17 — עוד דוגמה: זה לא רק Google
 // =====================================================================
 contentSlide({
   title: "עוד דוגמה: זה לא רק Google",
@@ -455,7 +458,7 @@ contentSlide({
 });
 
 // =====================================================================
-// שקף 17 — זה קורה גם בענק
+// שקף 18 — זה קורה גם בענק
 // =====================================================================
 contentSlide({
   title: "זה קורה גם בענק",
@@ -470,7 +473,7 @@ contentSlide({
 });
 
 // =====================================================================
-// שקף 18 — הדגמה חיה
+// שקף 19 — הדגמה חיה
 // =====================================================================
 milestoneSlide({
   eyebrow: "הדגמה חיה",
@@ -480,7 +483,7 @@ milestoneSlide({
 });
 
 // =====================================================================
-// שקף 19 — עוברים לתרגול
+// שקף 20 — עוברים לתרגול
 // =====================================================================
 milestoneSlide({
   eyebrow: "עוברים לתרגול",
@@ -490,7 +493,7 @@ milestoneSlide({
 });
 
 // =====================================================================
-// שקף 20 — סיכום
+// שקף 21 — סיכום
 // =====================================================================
 {
   const s = pres.addSlide();
@@ -522,7 +525,7 @@ milestoneSlide({
 }
 
 // =====================================================================
-// שקף 21 — מקורות
+// שקף 22 — מקורות
 // =====================================================================
 {
   const s = pres.addSlide();
