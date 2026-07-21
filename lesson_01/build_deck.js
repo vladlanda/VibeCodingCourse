@@ -497,55 +497,96 @@ contentSlide({
   source: "Forbes 2026",
 });
 
-// =====================================================================
-// שקף 19 — הדגמה חיה
-// =====================================================================
-{
+// עוזר לשקפי "תיבת פרומפט" - כותרת+תת-כותרת ממורכזות, ואז תיבת/תיבות טקסט
+// עם הפרומפט/ים המדויקים להקלדה. הכל מוטמע בשקף - בלי הפניה לקובץ חיצוני.
+function promptSlide({ eyebrow, title, sub, boxes }) {
   const s = pres.addSlide();
   s.background = { color: WHITE };
 
-  s.addText("הדגמה חיה", {
-    x: 0.6, y: 0.5, w: 12.13, h: 0.4, align: "center",
+  s.addText(eyebrow, {
+    x: 0.6, y: 0.45, w: 12.13, h: 0.4, align: "center",
     fontFace: BODY_FONT, italic: true, fontSize: 15, color: TEAL, rtlMode: true, margin: 0,
   });
-  s.addShape(pres.ShapeType.line, { x: 5.16, y: 0.95, w: 3.0, h: 0, line: { color: TEAL, width: 1.5 } });
-  s.addText("20 דקות. בונים יחד, בזמן אמת.", {
-    x: 0.6, y: 1.1, w: 12.13, h: 0.65, align: "center",
-    fontFace: TITLE_FONT, bold: true, fontSize: 28, color: TEXT_DARK, rtlMode: true, margin: 0,
+  s.addShape(pres.ShapeType.line, { x: 5.16, y: 0.9, w: 3.0, h: 0, line: { color: TEAL, width: 1.5 } });
+  s.addText(title, {
+    x: 0.6, y: 1.05, w: 12.13, h: 0.6, align: "center",
+    fontFace: TITLE_FONT, bold: true, fontSize: 26, color: TEXT_DARK, rtlMode: true, margin: 0,
   });
-  s.addText("הפרומפט הראשון להקלדה חיה מול הכיתה, לפי ה-Workflow שלמדנו:", {
-    x: 0.6, y: 1.75, w: 12.13, h: 0.4, align: "center",
-    fontFace: BODY_FONT, italic: true, fontSize: 15, color: MUTED, rtlMode: true, margin: 0,
+  if (sub) {
+    s.addText(sub, {
+      x: 0.6, y: 1.65, w: 12.13, h: 0.35, align: "center",
+      fontFace: BODY_FONT, italic: true, fontSize: 14, color: MUTED, rtlMode: true, margin: 0,
+    });
+  }
+
+  let y = sub ? 2.15 : 1.8;
+  const totalH = 6.85 - y;
+  const gap = 0.2;
+  const boxH = (totalH - gap * (boxes.length - 1)) / boxes.length;
+
+  boxes.forEach((box) => {
+    s.addText(box.label, {
+      x: 0.6, y, w: 12.13, h: 0.3, align: "right",
+      fontFace: TITLE_FONT, bold: true, fontSize: 14, color: TEXT_DARK, rtlMode: true, margin: 0,
+    });
+    const innerY = y + 0.32;
+    const innerH = boxH - 0.32;
+    s.addShape(pres.ShapeType.rect, {
+      x: 1.0, y: innerY, w: 11.33, h: innerH,
+      fill: { color: PH_BG },
+      line: { color: PH_BORDER, width: 1 },
+    });
+    s.addText(paragraphRuns(box.lines, { fontFace: "Courier New", fontSize: 14, color: TEXT_DARK }), {
+      x: 1.3, y: innerY + 0.15, w: 10.73, h: innerH - 0.3,
+      align: "right", valign: "top", rtlMode: true, margin: 0,
+    });
+    y += boxH + gap;
   });
 
-  // תיבת "פרומפט" - הטקסט המדויק להקלדה, לא placeholder
-  const promptBoxY = 2.35;
-  const promptBoxH = 3.55;
-  s.addShape(pres.ShapeType.rect, {
-    x: 1.3, y: promptBoxY, w: 10.73, h: promptBoxH,
-    fill: { color: PH_BG },
-    line: { color: PH_BORDER, width: 1 },
-  });
-  s.addText(
-    paragraphRuns(
-      [
+  addFooter(s);
+  return s;
+}
+
+// =====================================================================
+// שקף 19 — הדגמה חיה (חלק א׳: פרומפט 1)
+// =====================================================================
+promptSlide({
+  eyebrow: "הדגמה חיה (חלק א׳)",
+  title: "20 דקות. בונים יחד, בזמן אמת.",
+  sub: "פרומפט 1 — ההתחלה, מקלידים מול הכיתה:",
+  boxes: [
+    {
+      label: "",
+      lines: [
         "בוא נבנה יחד, שלב אחר שלב, אפליקציית Note-Taking פשוטה שרצה בדפדפן — קובץ HTML יחיד עם CSS ו-JS מוטמעים, בלי שרת.",
         "שלב 1: תתחיל רק במבנה הבסיסי — אזור טקסט לכתיבת פתק חדש, וכפתור שמירה. אחרי שאני מאשר, נמשיך לשלב הבא (הצגת רשימת הפתקים שנשמרו).",
       ],
-      { fontFace: "Courier New", fontSize: 15, color: TEXT_DARK }
-    ),
-    { x: 1.65, y: promptBoxY + 0.3, w: 10.03, h: promptBoxH - 0.6, align: "right", valign: "top", rtlMode: true, margin: 0 }
-  );
+    },
+  ],
+});
 
-  s.addText(
-    "שני הפרומפטים הבאים בהדגמה (הצגת הפתקים שנשמרו, וחיפוש חופשי) — בקובץ demo/prompt.md",
+// =====================================================================
+// שקף 20 — הדגמה חיה (חלק ב׳: פרומפטים 2-3)
+// =====================================================================
+promptSlide({
+  eyebrow: "הדגמה חיה (חלק ב׳)",
+  title: "ממשיכים בזמן אמת",
+  sub: "אחרי שהתוצאה של פרומפט 1 עובדת מקלידים בהמשך:",
+  boxes: [
     {
-      x: 0.6, y: promptBoxY + promptBoxH + 0.15, w: 12.13, h: 0.4, align: "center",
-      fontFace: BODY_FONT, italic: true, fontSize: 12, color: MUTED, rtlMode: true, margin: 0,
-    }
-  );
-  addFooter(s);
-}
+      label: "פרומפט 2 (אחרי אישור שלב 1):",
+      lines: [
+        "מעולה. עכשיו תוסיף: הצגת כל הפתקים השמורים מתחת לטופס, כל אחד בכרטיס נפרד, עם כפתור מחיקה. השתמש ב-localStorage לשמירה בין רענוני דף.",
+      ],
+    },
+    {
+      label: "פרומפט 3 (אופציונלי, אם נשאר זמן):",
+      lines: [
+        "תוסיף חיפוש טקסט חופשי שמסנן את הפתקים המוצגים בזמן אמת תוך כדי הקלדה.",
+      ],
+    },
+  ],
+});
 
 // =====================================================================
 // שקף 20 — עוברים לתרגול
