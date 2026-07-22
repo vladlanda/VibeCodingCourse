@@ -1,6 +1,6 @@
 # solutions.md — שיעור 1 (למרצה בלבד, לא לחלוקה לסטודנטים)
 
-זהו תרגיל פתוח מבוסס AI — אין "פתרון נכון" יחיד. הקובץ הזה מכיל (א) קריטריוני קבלה להערכה, ו-(ב) הפניה למימוש דוגמה אחד ב-`demo/todo_app/index.html`.
+זהו תרגיל פתוח מבוסס AI — אין "פתרון נכון" יחיד. הקובץ הזה מכיל (א) קריטריוני קבלה להערכה, ו-(ב) מימוש דוגמה מלא (קוד מוטמע למטה, לא בקובץ נפרד).
 
 ## קריטריוני קבלה (Rubric)
 
@@ -22,4 +22,107 @@
 
 ## מימוש לדוגמה
 
-ראו `demo/todo_app/index.html` — קובץ HTML יחיד, ללא תלויות חיצוניות, שמדגים מימוש מלא של כל 4 הדרישות. אפשר להריץ אותו ישירות בדפדפן (לפתוח את הקובץ) כדי להראות "איך אמור להיראות תוצר תקין" אם צריך רף השוואה, אבל לא לחלק אותו לסטודנטים לפני התרגול.
+קובץ HTML יחיד, ללא תלויות חיצוניות, שמדגים מימוש מלא של כל 4 הדרישות. שימו לב: **לא לחלק את הקוד הזה לסטודנטים לפני התרגול** — רק להשתמש בו כרף השוואה ("איך אמור להיראות תוצר תקין") אם צריך, או לבדיקה מהירה שהאפליקציה עובדת.
+
+כדי להריץ: מעתיקים את הקוד למטה לקובץ בשם `index.html` ופותחים אותו בדפדפן.
+
+```html
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>Todo App — Reference Implementation</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 480px; margin: 40px auto; background: #f5f5f7; }
+  h1 { text-align: center; color: #222; }
+  form { display: flex; gap: 8px; margin-bottom: 16px; }
+  input[type="text"] { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
+  button { padding: 10px 16px; border: none; border-radius: 6px; background: #2563eb; color: white; font-size: 16px; cursor: pointer; }
+  button:hover { background: #1d4ed8; }
+  ul { list-style: none; padding: 0; }
+  li { display: flex; align-items: center; gap: 10px; background: white; padding: 10px 14px; border-radius: 6px; margin-bottom: 8px; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  li.done span { text-decoration: line-through; color: #999; }
+  li span { flex: 1; }
+  li button.delete { background: #dc2626; }
+  li button.delete:hover { background: #b91c1c; }
+  .empty { text-align: center; color: #999; margin-top: 20px; }
+</style>
+</head>
+<body>
+  <h1>המשימות שלי</h1>
+  <form id="todo-form">
+    <input type="text" id="todo-input" placeholder="משימה חדשה..." required>
+    <button type="submit">הוסף</button>
+  </form>
+  <ul id="todo-list"></ul>
+  <p class="empty" id="empty-msg" style="display:none;">אין משימות עדיין — הוסיפו את הראשונה!</p>
+
+<script>
+  const STORAGE_KEY = "vibe-coding-todos";
+  const form = document.getElementById("todo-form");
+  const input = document.getElementById("todo-input");
+  const list = document.getElementById("todo-list");
+  const emptyMsg = document.getElementById("empty-msg");
+
+  function loadTodos() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }
+
+  function saveTodos(todos) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+  }
+
+  function render() {
+    const todos = loadTodos();
+    list.innerHTML = "";
+    emptyMsg.style.display = todos.length === 0 ? "block" : "none";
+
+    todos.forEach((todo, index) => {
+      const li = document.createElement("li");
+      if (todo.done) li.classList.add("done");
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = todo.done;
+      checkbox.addEventListener("change", () => {
+        todo.done = checkbox.checked;
+        saveTodos(todos);
+        render();
+      });
+
+      const span = document.createElement("span");
+      span.textContent = todo.text;
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "מחק";
+      deleteBtn.className = "delete";
+      deleteBtn.addEventListener("click", () => {
+        todos.splice(index, 1);
+        saveTodos(todos);
+        render();
+      });
+
+      li.appendChild(checkbox);
+      li.appendChild(span);
+      li.appendChild(deleteBtn);
+      list.appendChild(li);
+    });
+  }
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+    const todos = loadTodos();
+    todos.push({ text, done: false });
+    saveTodos(todos);
+    input.value = "";
+    render();
+  });
+
+  render();
+</script>
+</body>
+</html>
+```
