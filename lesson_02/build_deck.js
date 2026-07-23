@@ -3,585 +3,615 @@ const pptxgen = require("pptxgenjs");
 const pres = new pptxgen();
 pres.layout = "LAYOUT_WIDE"; // 13.33 x 7.5
 
-// ---------- palette (matches lesson_01 for course brand consistency) ----------
-const DARK = "1B1F3B";
-const DARK2 = "2A2F55";
-const TEAL = "00C2A8";
-const TEAL_TINT = "E6FBF7";
-const ICE = "CADCFC";
+// ---------- palette (זהה לשיעור 1 לעקביות מותג הקורס) ----------
 const TEXT_DARK = "1B1F3B";
 const MUTED = "6B7280";
-const WARN = "FFB000";
-const WARN_TINT = "FFF6E6";
-const PH_BG = "EDEDF2";
-const PH_BG_DARK = "2A2F55";
+const TEAL = "00A88A";
+const PH_BG = "F6F6F8";
 const PH_BORDER = "B8B8C8";
 const WHITE = "FFFFFF";
 
 const TITLE_FONT = "Arial";
 const BODY_FONT = "Calibri";
 
-// ---------- helpers ----------
-function addImagePlaceholder(slide, x, y, w, h, label, dark) {
-  slide.addShape(pres.ShapeType.rect, {
-    x, y, w, h,
-    fill: { color: dark ? PH_BG_DARK : PH_BG },
-    line: { color: dark ? TEAL : PH_BORDER, width: 1.25, dashType: "dash" },
-  });
-  slide.addText(label, {
-    x, y, w, h, margin: 8,
-    align: "center", valign: "middle",
-    fontFace: BODY_FONT, fontSize: 12, italic: true,
-    color: dark ? TEAL : MUTED, rtlMode: true,
+const LESSON_LABEL = "שיעור 2";
+let SLIDE_NUM = 0;
+
+// ---------- טקסט עשיר: פירוק **בולד** לריצות טקסט ----------
+// הערה קריטית (זהה לשיעור 1): rtlMode חייב להיות בתוך options של כל ריצה
+// וריצה, לא רק ב-options הכלליים של addText - אחרת pptxgenjs לא מסמן
+// rtl="1" ב-XML והמצגת תיפתח LTR בפועל ב-PowerPoint אמיתי.
+function runs(text, base = {}) {
+  const merged = { rtlMode: true, ...base };
+  const parts = text.split(/(\*\*[^*]+\*\*)/g).filter((p) => p.length > 0);
+  return parts.map((p) => {
+    if (p.startsWith("**") && p.endsWith("**")) {
+      return { text: p.slice(2, -2), options: { ...merged, bold: true } };
+    }
+    return { text: p, options: { ...merged } };
   });
 }
 
-function addSlideTitle(slide, title, opts = {}) {
-  slide.addText(title, {
-    x: 0.6, y: 0.4, w: 12.13, h: 0.9,
+// בונה מערך ריצות טקסט עבור רשימת בולטים - בולט מובנה (buChar) ולא תו "•"
+// מילולי, כדי למנוע באג מיקום בולט/סוגריים כשריצה ראשונה מתחילה באנגלית
+// מודגשת (מתועד ב-lesson_01/build_deck.js ובפרומפט המרכזי).
+function bulletRuns(bullets, base = {}) {
+  const out = [];
+  const bulletOpt = { code: "2022", indent: 18 };
+  bullets.forEach((b, i) => {
+    const r = runs(b, base);
+    // הערה קריטית: כשבולט מכיל טקסט מודגש (**...**) בתוך המשפט, runs() מפרק
+    // אותו למספר ריצות (runs). pptxgenjs פולט <a:pPr> נפרד לכל ריצה שמקבלת
+    // options שונים - וכל <a:pPr> כזה שאין לו bullet מפורש מקבל <a:buNone/>
+    // אוטומטית. ה-<a:buNone/> הזה "מנצח" את ה-<a:buChar/> הקודם ב-render
+    // בפועל (למשל ב-LibreOffice), והבולט נעלם! לכן חובה להצמיד את אותו
+    // אובייקט bullet לכל ריצה בפסקה, לא רק לריצה הראשונה - כדי שכל ה-pPr
+    // שנוצרים יהיו זהים ועקביים.
+    r.forEach((run) => {
+      run.options = { ...run.options, bullet: bulletOpt };
+    });
+    r[r.length - 1] = {
+      ...r[r.length - 1],
+      options: { ...r[r.length - 1].options, breakLine: i < bullets.length - 1 },
+    };
+    out.push(...r);
+  });
+  return out;
+}
+
+// בונה מערך ריצות טקסט עבור כמה פסקאות עם שורה ריקה מפרידה (בלי בולטים) -
+// לתיבת "טקסט מלא להקלדה", כמו פרומפט
+function paragraphRuns(paragraphs, base = {}) {
+  const out = [];
+  paragraphs.forEach((p, i) => {
+    const r = runs(p, base);
+    r[r.length - 1] = {
+      ...r[r.length - 1],
+      options: { ...r[r.length - 1].options, breakLine: true },
+    };
+    out.push(...r);
+    if (i < paragraphs.length - 1) {
+      out.push({ text: "", options: { ...base, rtlMode: true, breakLine: true } });
+    }
+  });
+  return out;
+}
+
+// ---------- בלוקים בסיסיים ----------
+function addTitle(slide, text) {
+  slide.addText(text, {
+    x: 0.6, y: 0.35, w: 12.13, h: 0.75,
     align: "right", fontFace: TITLE_FONT, bold: true,
-    fontSize: opts.fontSize || 30, color: opts.color || TEXT_DARK,
-    rtlMode: true, margin: 0,
+    fontSize: 28, color: TEXT_DARK, rtlMode: true, margin: 0,
   });
 }
 
-function addFooter(slide, n, dark) {
-  slide.addText(`Vibe Coding · שיעור 2 · שקף ${n}`, {
-    x: 0.6, y: 7.1, w: 12.13, h: 0.3,
-    align: "right", fontFace: BODY_FONT, fontSize: 9,
-    color: dark ? "8891C2" : "A6A6B0", rtlMode: true, margin: 0,
+function addQuestion(slide, text, y = 1.12) {
+  slide.addText(runs(text, { fontFace: BODY_FONT, fontSize: 17, italic: true, color: MUTED }), {
+    x: 0.6, y, w: 12.13, h: 0.45,
+    align: "right", rtlMode: true, margin: 0,
+  });
+}
+
+function addBullets(slide, bullets, y = 1.65, h = 3.6, opts = {}) {
+  slide.addText(bulletRuns(bullets, { fontFace: BODY_FONT, fontSize: opts.fontSize || 19, color: TEXT_DARK }), {
+    x: 0.6, y, w: 12.13, h,
+    align: "right", rtlMode: true, paraSpaceAfter: 10, margin: 0,
+  });
+}
+
+function addBestPractice(slide, text, y) {
+  slide.addShape(pres.ShapeType.line, {
+    x: 0.6, y, w: 12.13, h: 0, line: { color: PH_BORDER, width: 0.75 },
+  });
+  const withLabel = "✔ מה עושים בפועל: " + text;
+  slide.addText(runs(withLabel, { fontFace: TITLE_FONT, fontSize: 17, color: TEAL }), {
+    x: 0.6, y: y + 0.1, w: 12.13, h: 0.95,
+    align: "right", rtlMode: true, margin: 0,
   });
 }
 
 function addSourceCaption(slide, text) {
-  slide.addText(text, {
+  slide.addText("מקור: " + text, {
     x: 0.6, y: 6.75, w: 12.13, h: 0.3,
-    align: "right", fontFace: BODY_FONT, italic: true, fontSize: 10,
-    color: MUTED, rtlMode: true, margin: 0,
+    align: "right", fontFace: BODY_FONT, italic: true, fontSize: 10, color: MUTED, rtlMode: true, margin: 0,
   });
 }
 
-function iconCircle(slide, x, y, d, label, fillColor, textColor) {
-  slide.addShape(pres.ShapeType.ellipse, { x, y, w: d, h: d, fill: { color: fillColor }, line: { type: "none" } });
-  slide.addText(String(label), {
-    x, y, w: d, h: d, align: "center", valign: "middle",
-    fontFace: TITLE_FONT, bold: true, fontSize: d > 0.6 ? 20 : 14,
-    color: textColor, margin: 0,
+function addFooter(slide) {
+  SLIDE_NUM += 1;
+  slide.addText(`Vibe Coding · ${LESSON_LABEL} · שקף ${SLIDE_NUM}`, {
+    x: 0.6, y: 7.1, w: 12.13, h: 0.3,
+    align: "right", fontFace: BODY_FONT, fontSize: 9, color: "A6A6B0", rtlMode: true, margin: 0,
   });
 }
 
-function statCallout(slide, x, y, w, h, big, small, opts = {}) {
-  slide.addShape(pres.ShapeType.roundRect, {
-    x, y, w, h, rectRadius: 0.1,
-    fill: { color: opts.fill || TEAL_TINT }, line: { type: "none" },
-  });
-  slide.addText(big, {
-    x, y: y + 0.15, w, h: h - 0.75, align: "center", valign: "bottom",
-    fontFace: TITLE_FONT, bold: true, fontSize: opts.bigSize || 38,
-    color: opts.bigColor || TEAL, margin: 0,
-  });
-  slide.addText(small, {
-    x: x + 0.15, y: y + h - 0.65, w: w - 0.3, h: 0.6, align: "center", valign: "top",
-    fontFace: BODY_FONT, fontSize: 12.5, color: opts.smallColor || TEXT_DARK, rtlMode: true, margin: 0,
-  });
-}
-
-// bullet list helper: title/subtitle content + a right-side image placeholder
-function conceptSlide(n, title, bullets, imgLabel, opts = {}) {
+// שקף תוכן רגיל: כותרת → שאלה → בולטים → מה עושים בפועל → (מקור) → פוטר
+// שלב זה בכוונה בלי איורים/דיאגרמות (יתווספו בסבב נפרד לפי בקשת המשתמש) -
+// הבולטים מקבלים את כל הגובה הפנוי במקום.
+function contentSlide({ title, question, bullets, bestPractice, source }) {
   const s = pres.addSlide();
   s.background = { color: WHITE };
-  addSlideTitle(s, title);
+  addTitle(s, title);
+  if (question) addQuestion(s, question);
 
-  s.addText(
-    bullets.map((b, i) => ({ text: "• " + b, options: { rtlMode: true, breakLine: i < bullets.length - 1 } })),
-    { x: 0.6, y: 1.9, w: 12.13, h: 3.0, align: "right", fontFace: BODY_FONT, fontSize: opts.fontSize || 17, color: TEXT_DARK, rtlMode: true, paraSpaceAfter: 14, margin: 0 }
-  );
+  const bulletsY = question ? 1.65 : 1.35;
+  const bulletsH = bestPractice ? 4.3 : 5.2;
+  addBullets(s, bullets, bulletsY, bulletsH);
 
-  addImagePlaceholder(s, 0.6, 5.0, 12.13, 1.75, imgLabel);
-  addFooter(s, n);
+  let nextY = bulletsY + bulletsH + 0.15;
+  if (bestPractice) {
+    addBestPractice(s, bestPractice, nextY);
+    nextY += 1.0;
+  }
+  if (source) addSourceCaption(s, source);
+  addFooter(s);
+  return s;
+}
+
+// שקף פרומפט: eyebrow/title/sub במרכז, ואז תיבה אחת או יותר עם טקסט
+// מוטמע במלואו (בפונט Courier New) - לפרומפטים מדויקים לתרגול/הדגמה.
+function promptSlide({ eyebrow, title, sub, boxes }) {
+  const s = pres.addSlide();
+  s.background = { color: WHITE };
+
+  s.addText(eyebrow, {
+    x: 0.6, y: 0.55, w: 12.13, h: 0.4, align: "center",
+    fontFace: BODY_FONT, italic: true, fontSize: 15, color: TEAL, rtlMode: true, margin: 0,
+  });
+  s.addShape(pres.ShapeType.line, { x: 5.16, y: 1.0, w: 3.0, h: 0, line: { color: TEAL, width: 1.5 } });
+  s.addText(title, {
+    x: 0.6, y: 1.15, w: 12.13, h: 0.75, align: "center",
+    fontFace: TITLE_FONT, bold: true, fontSize: 26, color: TEXT_DARK, rtlMode: true, margin: 0,
+  });
+  if (sub) {
+    s.addText(sub, {
+      x: 0.6, y: 1.9, w: 12.13, h: 0.75, align: "center",
+      fontFace: BODY_FONT, italic: true, fontSize: 14, color: MUTED, rtlMode: true, margin: 0,
+    });
+  }
+
+  const startY = 2.85;
+  const availH = 6.6 - startY;
+  const gap = 0.25;
+  const boxH = (availH - gap * (boxes.length - 1)) / boxes.length;
+
+  boxes.forEach((box, i) => {
+    const y = startY + i * (boxH + gap);
+    if (box.label) {
+      s.addText(box.label, {
+        x: 0.6, y: y - 0.02, w: 12.13, h: 0.3, align: "right",
+        fontFace: TITLE_FONT, bold: true, fontSize: 13, color: TEAL, rtlMode: true, margin: 0,
+      });
+    }
+    const boxY = box.label ? y + 0.3 : y;
+    const boxHAdj = box.label ? boxH - 0.3 : boxH;
+    s.addShape(pres.ShapeType.roundRect, {
+      x: 0.6, y: boxY, w: 12.13, h: boxHAdj, rectRadius: 0.06,
+      fill: { color: PH_BG }, line: { color: PH_BORDER, width: 1 },
+    });
+    s.addText(paragraphRuns(box.lines, { fontFace: "Courier New", fontSize: 13, color: TEXT_DARK }), {
+      x: 0.85, y: boxY + 0.15, w: 11.63, h: boxHAdj - 0.3,
+      align: "right", rtlMode: true, margin: 0,
+    });
+  });
+
+  addFooter(s);
   return s;
 }
 
 // =====================================================================
-// SLIDE 1 — Title
+// שקף 1 — כותרת
 // =====================================================================
 {
   const s = pres.addSlide();
-  s.background = { color: DARK };
+  s.background = { color: WHITE };
 
   s.addText("Vibe Coding – AI-Native Software Development", {
-    x: 0.6, y: 0.55, w: 6.2, h: 0.4, align: "right",
+    x: 0.6, y: 0.55, w: 12.13, h: 0.4, align: "center",
     fontFace: BODY_FONT, fontSize: 13, color: TEAL, italic: true, rtlMode: true, margin: 0,
   });
   s.addText("שיעור 2: AI Development Environment", {
-    x: 0.6, y: 1.05, w: 6.2, h: 1.4, align: "right",
-    fontFace: TITLE_FONT, bold: true, fontSize: 34, color: WHITE, rtlMode: true, margin: 0,
+    x: 0.6, y: 1.05, w: 12.13, h: 1.1, align: "center",
+    fontFace: TITLE_FONT, bold: true, fontSize: 36, color: TEXT_DARK, rtlMode: true, margin: 0,
   });
+  s.addText("Introduction to AI Development Environment", {
+    x: 0.6, y: 2.1, w: 12.13, h: 0.5, align: "center",
+    fontFace: BODY_FONT, italic: true, fontSize: 16, color: MUTED, rtlMode: true, margin: 0,
+  });
+
   s.addText("בסוף השיעור תדעו לענות על:", {
-    x: 0.6, y: 3.0, w: 6.2, h: 0.4, align: "right",
-    fontFace: TITLE_FONT, bold: true, fontSize: 16, color: WHITE, rtlMode: true, margin: 0,
+    x: 2.5, y: 3.1, w: 8.33, h: 0.4, align: "right",
+    fontFace: TITLE_FONT, bold: true, fontSize: 16, color: TEXT_DARK, rtlMode: true, margin: 0,
   });
   s.addText(
-    [
-      { text: "• מה זה IDE, Git, GitHub — ולמה צריך כל אחד מהם?", options: { rtlMode: true, breakLine: true } },
-      { text: "• מה ההבדל בין כלי Autocomplete לכלי Agentic?", options: { rtlMode: true, breakLine: true } },
-      { text: "• איך פותחים ומנהלים session עם Claude Code בפועל?", options: { rtlMode: true, breakLine: true } },
-      { text: "• אילו כלי AI חינמיים זמינים כדי להתחיל בלי תקציב?", options: { rtlMode: true, breakLine: false } },
-    ],
-    { x: 0.6, y: 3.5, w: 6.2, h: 2.6, align: "right", fontFace: BODY_FONT, fontSize: 14, color: ICE, rtlMode: true, paraSpaceAfter: 10, margin: 0 }
+    bulletRuns(
+      [
+        "מה זה IDE, Git, ו-GitHub — ולמה כל אחד מהם קריטי לעבודה עם AI?",
+        "מה ההבדל בין כלי Autocomplete לכלי Agentic?",
+        "איך נראה תהליך עבודה טיפוסי מול כלי AI אג'נטי כמו Claude Code?",
+        "אילו כלים חינמיים זמינים כדי להתחיל בלי תקציב?",
+      ],
+      { fontFace: BODY_FONT, fontSize: 17, color: TEXT_DARK }
+    ),
+    { x: 2.5, y: 3.6, w: 8.33, h: 2.4, align: "right", rtlMode: true, paraSpaceAfter: 8, margin: 0 }
   );
 
-  addImagePlaceholder(s, 7.2, 0.7, 5.53, 6.1, "[תמונה: שולחן עבודה — VS Code פתוח עם פאנל Claude Code בצד]", true);
   s.addText("Vibe Coding Course · Lesson 2 of 13", {
-    x: 0.6, y: 6.9, w: 6.2, h: 0.3, align: "right",
-    fontFace: BODY_FONT, fontSize: 10, color: "8891C2", rtlMode: true, margin: 0,
+    x: 0.6, y: 7.1, w: 12.13, h: 0.3, align: "center",
+    fontFace: BODY_FONT, fontSize: 10, color: MUTED, rtlMode: true, margin: 0,
   });
+  SLIDE_NUM += 1;
 }
 
 // =====================================================================
-// SLIDE 2 — מה זה בכלל IDE?
+// שקף 2 — מה זה בכלל IDE?
 // =====================================================================
-conceptSlide(
-  2,
-  "מה זה בכלל IDE?",
-  [
-    "קובץ טקסט רגיל (Notepad) = אין צביעת תחביר, אין השלמה, אין הרצה",
-    "IDE (סביבת פיתוח משולבת) = עורך קוד + טרמינל + כלי דיבוג, הכל במקום אחד",
-    "VS Code = ה-IDE החינמי והפופולרי ביותר כיום",
-    "רוב כלי ה-AI האג'נטיים (כולל Claude Code) מתחברים אליו כתוסף",
+contentSlide({
+  title: "מה זה בכלל IDE?",
+  question: "השאלה: איך בכלל כותבים קוד, טכנית?",
+  bullets: [
+    "אפשר טכנית לפתוח קובץ טקסט רגיל (כמו Notepad) ולהקליד בו — זה עובד, אבל בלי שום עזרה: אין צביעת תחביר (סימון צבעוני של מילות קוד), אין השלמה אוטומטית, ואין דרך להריץ קוד בלי לעבור לתוכנה אחרת לגמרי",
+    "**IDE** (ראשי תיבות: Integrated Development Environment — סביבת פיתוח משולבת) = תוכנה שמאחדת במקום אחד עורך טקסט חכם, טרמינל מובנה (שורת פקודה בתוך התוכנה עצמה), וכלים לאיתור באגים",
+    "**VS Code** (ראשי תיבות של Visual Studio Code) = ה-IDE החינמי והפופולרי ביותר כיום",
+    "רוב כלי ה-AI האג'נטיים (כולל Claude Code) מתחברים ל-VS Code כתוסף (Extension), או פועלים לצידו מתוך הטרמינל המובנה שלו",
   ],
-  "[תמונה: השוואה ויזואלית — Notepad עם טקסט פשוט לעומת VS Code עם עורך צבעוני, טרמינל, וסייד-בר]"
-);
+  bestPractice: "כל התרגול היום (ובכל שיעור מכאן והלאה) יתבצע בתוך VS Code — זה \"השולחן\" שעליו כל שאר הכלים יושבים.",
+});
 
 // =====================================================================
-// SLIDE 3 — מה הבעיה ש-Version Control פותר?
+// שקף 3 — מה הבעיה ש-Version Control פותר?
 // =====================================================================
-conceptSlide(
-  3,
-  "מה הבעיה ש-Version Control פותר?",
-  [
-    "עבודה.docx ← עבודה_v2.docx ← עבודה_v2_final.docx ← עבודה_v2_final_REALLY.docx",
-    "זה בדיוק מה שקורה עם קוד בלי כלי מתאים — וגרוע יותר כשכמה אנשים עובדים יחד",
-    "Version Control = מערכת ששומרת \"תמונת מצב\" מדויקת של הפרויקט, בכל נקודת זמן",
+contentSlide({
+  title: "מה הבעיה ש-Version Control פותר?",
+  question: "השאלה: איך שומרים גרסאות של קובץ בלי להתבלבל?",
+  bullets: [
+    "דמיינו שאתם כותבים עבודה ושומרים: `עבודה.docx`, `עבודה_v2.docx`, `עבודה_v2_final.docx`, `עבודה_v2_final_REALLY.docx` — זה בדיוק מה שקורה עם קוד בלי כלי מתאים, ומחמיר עוד יותר כשכמה אנשים עובדים על אותו פרויקט",
+    "**Version Control** (ניהול גרסאות) = מערכת ששומרת \"תמונת מצב\" (Snapshot — עותק מדויק של כל הפרויקט ברגע נתון) בכל נקודת זמן שתבחרו, עם אפשרות לחזור אליה, להשוות בין גרסאות, ולעבוד יחד עם אחרים בלי לדרוך אחד על השני",
   ],
-  "[תמונה: שרשרת קבצים מבולבלת עם שמות \"v2_final_REALLY\" לעומת היסטוריית Git מסודרת עם תאריכים]"
-);
+  bestPractice: "Version Control הוא לא \"נחמד שיהיה\" — הוא הבסיס שעליו כל שאר השיעור בנוי, כי בלעדיו אי אפשר לעבוד בבטחון עם AI (בשקף הבא נראה למה).",
+});
 
 // =====================================================================
-// SLIDE 4 — Git
+// שקף 4 — Git
 // =====================================================================
-{
-  const s = conceptSlide(
-    4,
-    "Git — הכלי שעושה את זה בפועל",
-    [
-      "Git = כלי ניהול גרסאות שרץ על המחשב שלכם (חינמי, קוד פתוח)",
-      "Repository (\"Repo\") = תיקיית הפרויקט שעליה Git \"שומר עין\"",
-      "Commit = תמונת מצב שמורה, עם הודעה שמסבירה מה השתנה",
-    ],
-    "[תמונה: איור של \"נקודת שמירה\" במשחק מחשב, מקביל למושג Commit ב-Git]"
-  );
-  s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 4.35, w: 12.13, h: 0.55, rectRadius: 0.08, fill: { color: TEAL_TINT }, line: { type: "none" } });
-  s.addText("כלל אצבע: Commit נקי לפני שנותנים ל-AI לגעת בקוד", {
-    x: 0.8, y: 4.35, w: 11.73, h: 0.55, align: "right", valign: "middle",
-    fontFace: TITLE_FONT, bold: true, fontSize: 14, color: TEXT_DARK, rtlMode: true, margin: 0,
-  });
-}
-
-// =====================================================================
-// SLIDE 5 — GitHub
-// =====================================================================
-conceptSlide(
-  5,
-  "GitHub — לא אותו דבר כמו Git",
-  [
-    "Git ≠ GitHub — בלבול נפוץ אצל מתחילים",
-    "Git = הכלי שרץ אצלכם במחשב, שומר היסטוריה מקומית",
-    "GitHub = שירות ענן (של מיקרוסופט) שמאחסן, מגבה, ומשתף Repositories",
-    "אנלוגיה: Git הוא ה-Word, GitHub הוא Google Drive שבו הוא מגובה ומשותף",
+contentSlide({
+  title: "Git — הכלי שעושה את זה בפועל",
+  question: "השאלה: איך בפועל מיישמים Version Control?",
+  bullets: [
+    "**Git** = כלי ניהול הגרסאות הנפוץ ביותר, רץ על המחשב שלכם בעצמו (בחינם, קוד פתוח — כל אחד יכול לראות ולשנות את הקוד שלו)",
+    "**Repository** (בקיצור **Repo**) = תיקיית הפרויקט שעליה Git \"שומר עין\" — כל קובץ בתוכה עוקב אחר ההיסטוריה שלו",
+    "**Commit** = \"תמונת מצב\" שמורה אחת, עם הודעה שמסבירה מה השתנה (למשל: \"הוספתי כפתור התחברות\") — בדיוק כמו נקודת שמירה במשחק מחשב, תמיד אפשר לחזור אליה",
+    "**למסלול AI:** זו רשת הביטחון שלכם כש-AI כותב קוד — אם הוא הורס משהו, Git מאפשר לחזור לתמונת המצב הקודמת תוך שניות",
   ],
-  "[תמונה: דיאגרמה — מחשב מקומי עם Git מחובר בחץ לענן עם לוגו GitHub]"
-);
+  bestPractice: "לפני שנותנים ל-AI לגעת בקוד, מוודאים שיש Commit נקי מאחור. זה לא בירוקרטיה — זה הביטוח שהופך ניסוי-וטעייה עם AI לבטוח.",
+});
 
 // =====================================================================
-// SLIDE 6 — GitHub בקנה מידה
+// שקף 5 — GitHub
 // =====================================================================
-{
-  const s = pres.addSlide();
-  s.background = { color: WHITE };
-  addSlideTitle(s, "GitHub בקנה מידה");
-
-  const stats = [
-    { big: "180M+", small: "מפתחים רשומים (36M+ הצטרפו בשנה האחרונה)" },
-    { big: "630M+", small: "Repositories" },
-    { big: "43.2M", small: "Pull Requests נמזגים בכל חודש" },
-    { big: "92%", small: "מחברות Fortune 100 משתמשות ב-GitHub Enterprise" },
-  ];
-  const xs = [9.75, 6.83, 3.91, 0.99];
-  stats.forEach((st, i) => statCallout(s, xs[i], 1.9, 2.7, 2.9, st.big, st.small));
-
-  s.addText("זו לא \"עוד פלטפורמה\" — זו התשתית של התעשייה.", {
-    x: 0.6, y: 5.2, w: 12.13, h: 0.7, align: "right",
-    fontFace: TITLE_FONT, bold: true, italic: true, fontSize: 16, color: TEXT_DARK, rtlMode: true, margin: 0,
-  });
-  addSourceCaption(s, "מקור: Kinsta, Skillademia — GitHub Statistics 2026");
-  addFooter(s, 6);
-}
-
-// =====================================================================
-// SLIDE 7 — מה זה בכלל "כלי AI לכתיבת קוד"?
-// =====================================================================
-conceptSlide(
-  7,
-  "מה זה בכלל \"כלי AI לכתיבת קוד\"?",
-  [
-    "תוכנה שמשלבת מודל שפה (LLM, משיעור 1) בתוך סביבת הפיתוח",
-    "כותבים בקשה בשפה טבעית (\"תוסיף כפתור שמוחק משימה\") ← הכלי מתרגם לקוד",
-    "יש כמה \"רמות\" של כלים כאלה — מהבסיסית ביותר ועד המתקדמת",
+contentSlide({
+  title: "GitHub — לא אותו דבר כמו Git",
+  question: "השאלה: אם Git כבר שומר הכל אצלי במחשב, למה צריך עוד שירות?",
+  bullets: [
+    "בלבול נפוץ אצל מתחילים: **Git ≠ GitHub**",
+    "Git = הכלי שרץ אצלכם במחשב, שומר היסטוריה מקומית בלבד",
+    "**GitHub** = שירות אחסון בענן (של Microsoft) ששומר עותק מגובה של ה-Repository באינטרנט, מאפשר לשתף אותו עם אחרים, ולשתף פעולה על אותו קוד (נרחיב בשיעור 10)",
+    "אנלוגיה: Git הוא כמו קובץ Word בודד במחשב שלכם; GitHub הוא כמו Google Drive — המקום שבו הוא מגובה ומשותף",
+    "**פעילות:** מי מכם כבר השתמש ב-Git בעבר, בכל הקשר שהוא — גם רק כדי לשכפל Repository של מישהו אחר? איך שיתפתם קוד עם מישהו לפני שהכרתם GitHub (וואטסאפ? מייל? Google Drive)?",
   ],
-  "[תמונה: תרשים זרימה — בקשה בשפה טבעית → מודל שפה → קוד שנכתב בפועל בקובץ]"
-);
+  bestPractice: "בתרגול היום תיצרו Repository ראשון משלכם ב-GitHub — זה הבית הקבוע של הפרויקט שילווה אתכם לאורך הסמסטר.",
+});
 
 // =====================================================================
-// SLIDE 8 — Autocomplete vs Agentic
+// שקף 6 — GitHub בקנה מידה
+// =====================================================================
+contentSlide({
+  title: "GitHub בקנה מידה",
+  bullets: [
+    "**180M+** מפתחים רשומים (36M+ הצטרפו בשנה האחרונה בלבד — קצב הצמיחה המהיר ביותר בהיסטוריית הפלטפורמה)",
+    "**630M+** Repositories",
+    "**43.2M** בקשות שילוב קוד (Pull Requests) נמזגות בכל חודש",
+    "**92%** מחברות **Fortune 100** (מדד 100 החברות הגדולות בעולם לפי הכנסות) משתמשות ב-GitHub Enterprise (הגרסה הארגונית בתשלום)",
+  ],
+  bestPractice: "זו לא \"עוד פלטפורמה\" — זו התשתית שרוב תעשיית התוכנה בנויה עליה.",
+  source: "Kinsta & Skillademia — GitHub Statistics 2026",
+});
+
+// =====================================================================
+// שקף 7 — מה זה בכלל "כלי AI לכתיבת קוד"?
+// =====================================================================
+contentSlide({
+  title: "מה זה בכלל \"כלי AI לכתיבת קוד\"?",
+  question: "השאלה: מה בדיוק קורה מאחורי הקלעים כשכלי AI \"כותב קוד\"?",
+  bullets: [
+    "כלי AI לכתיבת קוד = תוכנה שמשלבת מודל שפה (**LLM**, כפי שלמדנו בשיעור 1) בתוך סביבת הפיתוח שלכם",
+    "כותבים בקשה בשפה טבעית (\"תוסיף כפתור שמוחק משימה\") — הכלי מתרגם אותה לקוד בפועל בקבצים שלכם",
+    "יש כמה \"רמות\" של כלים כאלה, מהבסיסית ביותר ועד המתקדמת — וזה בדיוק ההבדל בין Autocomplete ל-Agentic שנפרט בשקף הבא",
+  ],
+  bestPractice: "בשיעור הקודם ראיתם הדגמה של זה בפעולה — עכשיו נגדיר את זה במדויק.",
+});
+
+// =====================================================================
+// שקף 8 — מה הופך כלי ל"אג'נטי"?
+// =====================================================================
+contentSlide({
+  title: "מה הופך כלי ל\"אג'נטי\"?",
+  question: "השאלה: מה ההבדל בין \"עוזר הקלדה\" לבין \"שותף לביצוע משימה\"?",
+  bullets: [
+    "**Autocomplete בסיסי** (הדורות הראשונים של כלי AI לקוד) — משלים שורה או פונקציה בודדת לפי הקשר מקומי; אתם עדיין מקבלים כל החלטה",
+    "**כלי Agentic** (כמו Claude Code) — מקבל משימה ברמה גבוהה (\"תוסיף התחברות עם Google לאפליקציה\"), ומבצע בעצמו סדרת פעולות: קורא קבצים רלוונטיים, כותב קוד במספר מקומות, מריץ בדיקות, ולעיתים גם מתקן את עצמו אם משהו נכשל",
+    "**למסלול AI:** זה דומה למעבר מ-Feature Engineering (בחירת מאפיינים) ידני למודלים מבוססי Deep Learning — גם שם המעבר הוא מ\"אני מגדיר כל שלב בעצמי\" ל\"אני מגדיר מטרה, והמערכת מבצעת יותר מהדרך אליה\" — אבל בשני המקרים אתם עדיין קובעים את המטרה ובודקים את התוצאה, בדיוק כמו ה-Evaluation שלכם ב-ML",
+  ],
+  bestPractice: "הקורס הזה עוסק בסוג השני (Agentic) — \"עוזר הקלדה\" זה לא המטרה כאן.",
+});
+
+// =====================================================================
+// שקף 9 — איך מודדים "כמה טוב" כלי אג'נטי
+// =====================================================================
+contentSlide({
+  title: "איך מודדים \"כמה טוב\" כלי אג'נטי?",
+  question: "השאלה: איך משווים בין כלי AI שונים בצורה אובייקטיבית?",
+  bullets: [
+    "הדרך המקצועית היא בנצ'מארקים (מבחני השוואה סטנדרטיים): **SWE-bench** (בעיות תכנות אמיתיות שנאספו מ-GitHub) ו-**Terminal-Bench** (משימות טרמינל/שורת-פקודה מורכבות)",
+    "**אזהרה מקצועית:** יש היום חמש גרסאות שונות של SWE-bench (Original, Verified, Pro, Multilingual, Live), וההשוואה ביניהן לא תמיד הוגנת",
+    "אפילו על אותם משקלי מודל בדיוק, יש שונות (Variance) של 10-20 נקודות אחוז, בהתאם ל-**Harness** (התשתית הטכנית שמריצה את הבדיקה בפועל)",
+  ],
+  bestPractice: "תמיד בודקים את המתודולוגיה מאחורי מספר בנצ'מארק לפני שסומכים עליו — בדיוק כמו שבודקים מתודולוגיה לפני שסומכים על הערכת מודל בכל הקשר אחר שאתם מכירים.",
+});
+
+// =====================================================================
+// שקף 10 — המרוץ לבנצ'מארק: המספרים
+// =====================================================================
+contentSlide({
+  title: "המרוץ לבנצ'מארק: המספרים",
+  bullets: [
+    "**80.8%** — התוצאה של Claude Code ב-SWE-bench Verified (הגרסה ה\"מנוקה\" של הבנצ'מארק)",
+    "**78.9%-83.1%** — טווח התוצאות של Claude Code ב-Terminal-Bench 2.1, תלוי בגרסת המודל",
+    "כפי שראינו בשקף הקודם — המספרים האלה חשובים, אבל **רק** ביחד עם אזהרת המתודולוגיה, לא בלעדיה",
+  ],
+  bestPractice: "מספר בנצ'מארק בודד הוא נקודת התחלה לבדיקה, לא מסקנה סופית.",
+  source: "DigitalApplied, MorphLLM — 2026",
+});
+
+// =====================================================================
+// שקף 11 — Claude Code: איך זה עובד בפועל
+// =====================================================================
+contentSlide({
+  title: "Claude Code — איך זה עובד בפועל",
+  question: "השאלה: אז איך בפועל נראית עבודה מול כלי אג'נטי, צעד-צעד?",
+  bullets: [
+    "**1. פתיחת Session** (חיבור פעיל אחד מול כלי ה-AI, מתחילתו ועד סופו) — מהטרמינל, או כתוסף בתוך VS Code",
+    "**2. הנחיה ברורה וספציפית** — אומרים בדיוק מה רוצים",
+    "**3. הכלי מציג תוכנית או מתחיל לפעול** — קורא קבצים, כותב קוד",
+    "**4. בודקים כל Diff** (תצוגה שמראה בדיוק אילו שורות קוד השתנו, נוספו, או נמחקו) **לפני שמאשרים**",
+    "**5. ממשיכים לצעד הבא**, או חוזרים לשלב 2 אם צריך תיקון",
+  ],
+  bestPractice: "זה בדיוק החיבור לשלבים 4-6 מה-Workflow שלמדנו בשיעור 1 (תכנון עם AI → מימוש עם AI → Code Review) — היום אתם עושים את זה בפועל, לא רק רואים הדגמה.",
+});
+
+// =====================================================================
+// שקף 12 — אתם כבר עובדים ליד AI
+// =====================================================================
+contentSlide({
+  title: "אתם כבר עובדים ליד AI",
+  question: "השאלה: זה נשמע מסובך — האם אתם באמת מתחילים מאפס?",
+  bullets: [
+    "**פעילות:** מי מכם כבר השתמש ב-ChatGPT או Claude כדי לכתוב סקריפט לניקוי דאטה, או פונקציית עזר למודל? מה עשיתם עם הקוד שקיבלתם בסוף?",
+    "ברוב הכיתות: התשובה היא העתק-הדבק לקובץ בעצמכם",
+    "כלי אג'נטי עושה בדיוק את זה בשבילכם — רק כותב ישירות לקבצים, וגם קורא את שאר הפרויקט קודם כדי להבין הקשר",
+  ],
+  bestPractice: "זה לא כלי חדש לגמרי — זה שדרוג למשהו שאתם כבר עושים, רק עם פחות חיכוך והרבה יותר הקשר.",
+});
+
+// =====================================================================
+// שקף 13 — מי משתמש במה, בפועל
+// =====================================================================
+contentSlide({
+  title: "מי משתמש במה, בפועל",
+  bullets: [
+    "**ChatGPT** — 82% נתח שימוש כללי לעזרה בקוד (הכלי הכי נפוץ)",
+    "**GitHub Copilot** — 68% נתח שימוש כללי",
+    "מבין ה-IDE-ים הממוקדי-AI: **Cursor** (עורך קוד עם AI מובנה) — 18% נתח שימוש כללי, אך 24% כ\"כלי ראשי\" בקרב מי שכבר עובד אג'נטית",
+    "**Claude Code** — 10% נתח שימוש כללי, אך **28%** כ\"כלי ראשי\" בקרב מי שכבר עובד אג'נטית — כלומר מי שבחר להתמקצע בעבודה אג'נטית מלאה נוטה לבחור בו דווקא",
+    "(ChatGPT ו-Copilot לא נמדדו בקטגוריית \"כלי ראשי אג'נטי\" כי הם משמשים בעיקר כעזר כללי, לא כסביבת עבודה אג'נטית מלאה)",
+  ],
+  bestPractice: "אין \"כלי אחד נכון\" — הקורס מלמד עם Claude Code כי הוא מייצג היטב את העבודה האג'נטית המלאה, אבל ה-Workflow שתלמדו עובד בכל אחד מהכלים האלה.",
+  source: "Stack Overflow Developer Survey (סקר שנתי בקרב מפתחים, מבית אתר Stack Overflow) 2025 · index.dev 2026",
+});
+
+// =====================================================================
+// שקף 14 — כלים חינמיים להתחלה
+// =====================================================================
+contentSlide({
+  title: "כלים חינמיים להתחלה",
+  bullets: [
+    "**GitHub Copilot Free** — מסלול חינמי רחב, ללא צורך באימות סטודנט, זמין ישירות ב-VS Code — נקודת הכניסה הפשוטה ביותר",
+    "**GitHub Student Developer Pack** — למי שמאמת חשבון סטודנט, מקבל הרחבה (בכפוף לזמינות הרשמה שמשתנה מעת לעת)",
+    "**Cursor** — IDE מלא מבוסס AI, עם מסלול חינמי מוגבל (מכסת השלמות בסיסית)",
+  ],
+  bestPractice: "שוק הכלים והמסלולים החינמיים משתנה מהר מאוד — בשיעור 1 ראינו איך Gemini CLI החינמי נסגר תוך פחות משנה. תמיד בודקים סטטוס עדכני קרוב למועד השימוש בפועל.",
+});
+
+// =====================================================================
+// שקף 15 — Best Practices (חלק א')
+// =====================================================================
+contentSlide({
+  title: "Best Practices לעבודה עם כלי Agentic (חלק א׳)",
+  bullets: [
+    "**1. הנחיות ברורות וספציפיות** — \"תוסיף התחברות\" עמום מדי; \"תוסיף התחברות עם Google **OAuth** (פרוטוקול התחברות מאובטח דרך חשבון קיים), עם Redirect (הפניה אוטומטית) לדף הבית אחרי הצלחה\" ברור וממוקד",
+    "**2. צעדים קטנים** — משימה גדולה מתפרקת לצעדים; קל יותר לבדוק תוצאה של צעד קטן מאשר של שינוי ענק",
+    "**3. בדיקת כל Diff** — לפני אישור שינוי, קוראים אותו. תמיד, בלי יוצא מן הכלל",
+  ],
+  bestPractice: "שלושת הכללים האלה (וגם השלושה בשקף הבא) הם מה שמבדיל שימוש מקצועי מ\"ניסוי מקרי\".",
+});
+
+// =====================================================================
+// שקף 16 — Best Practices (חלק ב')
+// =====================================================================
+contentSlide({
+  title: "Best Practices לעבודה עם כלי Agentic (חלק ב׳)",
+  bullets: [
+    "**4. Git כרשת ביטחון** — Commit לפני כל ניסוי משמעותי",
+    "**5. לא לסמוך בעיוורון** — אם משהו נראה \"יותר מדי חכם\", או משתמש בפונקציה שלא הכרתם — בודקים שהיא אכן קיימת (זוכרים את Hallucination משיעור 1?)",
+    "**6. איטרציה, לא ניסיון יחיד** — אם התוצאה הראשונה לא מושלמת, מבקשים תיקון ממוקד, לא מתחילים מאפס",
+  ],
+  bestPractice: "בשקף הבא נראה שיש לזה גם מחיר מדיד, לא רק \"עצה טובה\".",
+});
+
+// =====================================================================
+// שקף 17 — המחיר של דילוג על הכללים
+// =====================================================================
+contentSlide({
+  title: "המחיר של דילוג על הכללים",
+  bullets: [
+    "דו\"ח **DORA** (מחקר שנתי מוביל על תהליכי פיתוח תוכנה, מבית Google — הכרנו בשיעור 1) מצא: אימוץ AI בלי תהליך עבודה מסודר (בדיוק הכללים משני השקפים הקודמים) מוביל ל-**30-41%** יותר **חוב טכני** (עבודה \"מהירה\" עכשיו שדורשת תיקון יקר יותר בהמשך), לעומת עבודה עם תהליך מסודר",
+    "בקשות שילוב קוד (Pull Requests) שנכתבו על ידי AI נושאות **פי 1.7** יותר בעיות מ-PR שכתב בן אדם",
+  ],
+  bestPractice: "ה-Best Practices משני השקפים הקודמים הם לא בירוקרטיה — הם ההבדל בין \"AI שעוזר\" ל\"AI שיוצר בעיה גדולה יותר ממה שפתר\".",
+  source: "DORA — ROI of AI-Assisted Software Development, 2026",
+});
+
+// =====================================================================
+// שקף 18 — הדגמה חיה (חלק א׳)
+// =====================================================================
+contentSlide({
+  title: "הדגמה חיה (חלק א׳): Autocomplete מול Agentic",
+  bullets: [
+    "20-25 דקות. פותחים session אמיתי מול קוד קיים — פרויקט ה-Todo App שבנינו יחד בשיעור 1",
+    "**שלב 1 — Autocomplete (לא אג'נטי):** המרצה מקליד בעצמו בתוך `index.html`, למשל תוך כדי הוספת פונקציה חדשה, ונותן לכלי להשלים שורה אחת בלבד. הדגש: \"זה עוזר, אבל אני עדיין מחליט כל דבר.\"",
+    "**שלב 2 — שימוש אג'נטי אמיתי:** פותחים session אג'נטי מלא (Claude Code / Cursor Agent Mode) על אותה תיקייה, ומקלידים את הפרומפט שבשקף הבא",
+  ],
+  bestPractice: "הניגוד בין שני השלבים הוא הנקודה הפדגוגית המרכזית — לתת לכיתה לראות בעיניים את ההבדל, לא רק לשמוע עליו.",
+});
+
+// =====================================================================
+// שקף 19 — הדגמה חיה (חלק ב׳)
+// =====================================================================
+promptSlide({
+  eyebrow: "הדגמה חיה (חלק ב׳)",
+  title: "פרומפט אג'נטי מלא",
+  sub: "אחרי הדגמת Autocomplete בשלב 1, מקלידים את זה מול הכיתה:",
+  boxes: [
+    {
+      label: "",
+      lines: [
+        "תוסיף לאפליקציית ה-Todo הזו שדה \"עדיפות\" לכל משימה (נמוכה/בינונית/גבוהה),\nעם צבע רקע שונה לכל רמת עדיפות ברשימה. תשמור על אותו סגנון קוד שכבר קיים\nבקובץ.",
+      ],
+    },
+    {
+      label: "לפני האישור, עוצרים ובודקים מול הכיתה:",
+      lines: [
+        "עוצרים לפני אישור השינוי, ובודקים ביחד את ה-Diff שהתקבל: אילו שורות נוספו, אילו השתנו. שני דברים לשים לב אליהם: (א) האם הכלי \"קרא\" את הקוד הקיים לפני שהוסיף (שמר על מוסכמות שמות קיימות)? (ב) האם הכלי הציע לשנות משהו לא קשור (Scope Creep — \"זחילת היקף\", הרחבה לא מתוכננת של המשימה)? אם כן — זו הזדמנות להראות איך דוחים חלק מהצעה ומאשרים רק את מה שרלוונטי.",
+      ],
+    },
+  ],
+});
+
+// =====================================================================
+// שקף 20 — עוברים לתרגול (חלק א׳: המשימה)
+// =====================================================================
+contentSlide({
+  title: "עוברים לתרגול: הקמת סביבה (חלק א׳ — המשימה)",
+  question: "השאלה: מה המטרה של 45 הדקות האלה?",
+  bullets: [
+    "להקים סביבת עבודה אישית שתלווה אתכם לאורך כל הסמסטר, ולבצע בה פעולה אמיתית ראשונה עם כלי AI",
+    "המשימה: מתקינים VS Code + Git, יוצרים Repository חדש בשם `my-vibe-coding-env` ב-GitHub, משכפלים אותו למחשב (`git clone`), ומפעילים כלי AI חינמי (Copilot Free או שקול)",
+    "אז מבקשים מה-AI ליצור קובץ `hello.py` (או `hello.js`) שמדפיס הודעת פתיחה אישית — זו הפעולה האג'נטית הראשונה שלכם בקורס",
+  ],
+  bestPractice: "אם משהו בהתקנה לא עובד — זה בדיוק סוג הבעיה ש-AI טוב בפתרון שלה. מעתיקים את הודעת השגיאה המדויקת ושואלים את כלי ה-AI \"מה השגיאה הזו אומרת ואיך פותרים אותה?\" — זה תרגול לגיטימי, לא \"רמאות\".",
+});
+
+// =====================================================================
+// שקף 21 — עוברים לתרגול (חלק ב׳: פרומפט פתיחה)
+// =====================================================================
+promptSlide({
+  eyebrow: "עוברים לתרגול (חלק ב׳)",
+  title: "פרומפט פתיחה לתרגול",
+  sub: "התחילו מכאן, והתאימו את השם שלכם:",
+  boxes: [
+    {
+      label: "",
+      lines: [
+        "תיצור קובץ hello.py שמדפיס \"שלום מ-Vibe Coding, שיעור 2!\" ואת השם שלי\n[השם שלכם]. תוסיף גם הדפסה של התאריך הנוכחי.",
+      ],
+    },
+  ],
+});
+
+// =====================================================================
+// שקף 22 — עוברים לתרגול (חלק ג׳: מתי סיימתם)
+// =====================================================================
+contentSlide({
+  title: "עוברים לתרגול: מתי סיימתם? (חלק ג׳)",
+  question: "השאלה: איך יודעים שהתרגול הושלם בהצלחה?",
+  bullets: [
+    "VS Code מותקן ופתוח על תיקיית הפרויקט",
+    "Git מותקן, וה-Repository `my-vibe-coding-env` קיים ב-GitHub",
+    "כלי AI חינמי מותקן ופעיל (Copilot Free או שקול)",
+    "קובץ `hello.py`/`hello.js` נוצר בעזרת AI, נבדק, ורץ בהצלחה",
+    "בוצע Commit אחד לפחות, ונדחף (**Push** — העלאה מהמחשב המקומי לשרת המרוחק) ל-GitHub בהצלחה",
+  ],
+  bestPractice: "הבעיה הכי נפוצה בתרגול הזה היא אימות/הרשאות מול GitHub (HTTPS Token או SSH key — שתי שיטות שונות להוכיח שאתם באמת אתם). אם נתקעתם כאן — זה בדיוק המקום לבקש עזרה מהמרצה או מ-AI, זה לא קשור ליכולת התכנות שלכם.",
+});
+
+// =====================================================================
+// שקף 23 — סיכום
 // =====================================================================
 {
   const s = pres.addSlide();
   s.background = { color: WHITE };
-  addSlideTitle(s, "מה הופך כלי ל״אג'נטי״?");
+  addTitle(s, "סיכום");
 
-  s.addShape(pres.ShapeType.roundRect, { x: 6.93, y: 1.9, w: 5.6, h: 3.9, rectRadius: 0.12, fill: { color: "F2F2F2" }, line: { type: "none" } });
-  s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 1.9, w: 5.6, h: 3.9, rectRadius: 0.12, fill: { color: TEAL_TINT }, line: { type: "none" } });
-
-  s.addText("כלי Agentic (Claude Code)", { x: 0.9, y: 2.15, w: 5.0, h: 0.5, align: "right", fontFace: TITLE_FONT, bold: true, fontSize: 18, color: TEAL, rtlMode: true, margin: 0 });
   s.addText(
-    [
-      { text: "• מקבל משימה ברמה גבוהה", options: { rtlMode: true, breakLine: true } },
-      { text: "• קורא קבצים, כותב במספר מקומות", options: { rtlMode: true, breakLine: true } },
-      { text: "• מריץ בדיקות ומתקן את עצמו", options: { rtlMode: true, breakLine: true } },
-      { text: "• שותף לביצוע משימה", options: { rtlMode: true, breakLine: false } },
-    ],
-    { x: 0.9, y: 2.75, w: 5.0, h: 2.9, align: "right", fontFace: BODY_FONT, fontSize: 14, color: TEXT_DARK, rtlMode: true, paraSpaceAfter: 10, margin: 0 }
+    bulletRuns(
+      [
+        "VS Code + Git + GitHub = השולחן שעליו עובדים לאורך כל הקורס",
+        "Agentic ≠ Autocomplete — זה שותף לביצוע משימה, לא רק עוזר הקלדה (וזוכרים: תמיד בודקים Diff לפני אישור)",
+        "יש נקודת כניסה חינמית לכל הכלים שלמדנו היום — אין תירוץ לא להתחיל",
+      ],
+      { fontFace: BODY_FONT, fontSize: 19, color: TEXT_DARK }
+    ),
+    { x: 0.6, y: 1.5, w: 12.13, h: 2.2, align: "right", rtlMode: true, paraSpaceAfter: 12, margin: 0 }
   );
 
-  s.addText("Autocomplete בסיסי", { x: 7.23, y: 2.15, w: 5.0, h: 0.5, align: "right", fontFace: TITLE_FONT, bold: true, fontSize: 18, color: MUTED, rtlMode: true, margin: 0 });
-  s.addText(
-    [
-      { text: "• משלים שורה/פונקציה בודדת", options: { rtlMode: true, breakLine: true } },
-      { text: "• פועל לפי הקשר מקומי בלבד", options: { rtlMode: true, breakLine: true } },
-      { text: "• אתם מחליטים הכל", options: { rtlMode: true, breakLine: false } },
-    ],
-    { x: 7.23, y: 2.75, w: 5.0, h: 2.9, align: "right", fontFace: BODY_FONT, fontSize: 14, color: MUTED, rtlMode: true, paraSpaceAfter: 10, margin: 0 }
-  );
-
-  s.addText("ההבדל: עוזר הקלדה מול שותף לביצוע משימה.", {
-    x: 0.6, y: 6.0, w: 12.13, h: 0.6, align: "right",
-    fontFace: TITLE_FONT, bold: true, italic: true, fontSize: 17, color: TEXT_DARK, rtlMode: true, margin: 0,
-  });
-  addFooter(s, 8);
-}
-
-// =====================================================================
-// SLIDE 9 — המרוץ לבנצ'מארק
-// =====================================================================
-{
-  const s = pres.addSlide();
-  s.background = { color: WHITE };
-  addSlideTitle(s, "המרוץ לבנצ'מארק");
-
-  statCallout(s, 6.93, 1.9, 5.6, 2.3, "80.8%", "Claude Code ב-SWE-bench Verified", { bigSize: 44 });
-  statCallout(s, 0.6, 1.9, 5.6, 2.3, "78.9-83.1%", "Claude Code ב-Terminal-Bench 2.1 (טווח לפי מודל)", { bigSize: 36 });
-
-  s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 4.5, w: 12.13, h: 1.8, rectRadius: 0.1, fill: { color: WARN_TINT }, line: { type: "none" } });
-  iconCircle(s, 11.3, 4.7, 0.5, "!", WARN, WHITE);
-  s.addText(
-    "אזהרת מתודולוגיה: יש 5 גרסאות שונות של SWE-bench, ושונות של 10-20 נקודות בין הרצות זהות. תמיד בדקו מתודולוגיה לפני שסומכים על מספר בנצ'מארק בודד.",
-    { x: 0.9, y: 4.65, w: 10.2, h: 1.5, align: "right", valign: "middle", fontFace: TITLE_FONT, bold: true, fontSize: 14, color: TEXT_DARK, rtlMode: true, margin: 0 }
-  );
-  addSourceCaption(s, "מקור: DigitalApplied, MorphLLM — 2026");
-  addFooter(s, 9);
-}
-
-// =====================================================================
-// SLIDE 10 — Claude Code workflow
-// =====================================================================
-{
-  const s = pres.addSlide();
-  s.background = { color: WHITE };
-  addSlideTitle(s, "Claude Code — איך זה עובד בפועל");
-
-  const steps = ["פתיחת\nSession", "הנחיה\nברורה", "תוכנית /\nפעולה", "בדיקת\nDiff", "צעד\nהבא"];
-  const xs = [0.6, 2.93, 5.26, 7.59, 9.92];
-  steps.forEach((label, i) => {
-    const x = xs[i];
-    const fill = i === 3 ? WARN_TINT : TEAL_TINT;
-    s.addShape(pres.ShapeType.roundRect, { x, y: 2.2, w: 2.15, h: 1.7, rectRadius: 0.1, fill: { color: fill }, line: { type: "none" } });
-    iconCircle(s, x + 0.78, 2.35, 0.55, i + 1, i === 3 ? WARN : TEAL, WHITE);
-    s.addText(label, { x, y: 3.15, w: 2.15, h: 0.65, align: "center", valign: "top", fontFace: TITLE_FONT, bold: true, fontSize: 13, color: TEXT_DARK, margin: 2, rtlMode: true });
-    if (i < steps.length - 1) {
-      s.addText("←", { x: x + 2.15, y: 2.2, w: 0.35, h: 1.7, align: "center", valign: "middle", fontFace: TITLE_FONT, bold: true, fontSize: 20, color: MUTED, margin: 0 });
-    }
-  });
-
-  s.addText("בדיקת ה-Diff היא לא אופציונלית — זה השלב שבו אתם עדיין בשליטה", {
-    x: 0.6, y: 4.4, w: 12.13, h: 0.5, align: "right",
-    fontFace: BODY_FONT, italic: true, fontSize: 15, color: WARN, rtlMode: true, margin: 0,
-  });
-  s.addText("זה בדיוק שלבים 4-6 מה-Workflow שלמדנו בשיעור 1", {
-    x: 0.6, y: 5.4, w: 12.13, h: 0.5, align: "right",
-    fontFace: TITLE_FONT, bold: true, fontSize: 16, color: TEAL, rtlMode: true, margin: 0,
-  });
-  addFooter(s, 10);
-}
-
-// =====================================================================
-// SLIDE 11 — אתם כבר עובדים ליד AI
-// =====================================================================
-{
-  const s = pres.addSlide();
-  s.background = { color: TEAL_TINT };
-  addSlideTitle(s, "אתם כבר עובדים ליד AI");
-
-  s.addText(
-    [
-      { text: "• רובכם כבר משתמשים ב-ChatGPT/Claude לכתיבת קוד עזר למחקר", options: { rtlMode: true, breakLine: true } },
-      { text: "• מה עשיתם עם הקוד שקיבלתם? העתקתם-הדבקתם לקובץ", options: { rtlMode: true, breakLine: true } },
-      { text: "• כלי אג'נטי עושה בדיוק את זה — רק כותב ישירות, וקורא את הפרויקט קודם", options: { rtlMode: true, breakLine: false } },
-    ],
-    { x: 0.6, y: 1.9, w: 12.13, h: 2.2, align: "right", fontFace: BODY_FONT, fontSize: 17, color: TEXT_DARK, rtlMode: true, paraSpaceAfter: 14, margin: 0 }
-  );
-
-  s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 4.4, w: 12.13, h: 1.3, rectRadius: 0.1, fill: { color: DARK }, line: { type: "none" } });
-  s.addText("זה לא כלי חדש לגמרי — זה שדרוג למשהו שאתם כבר עושים", {
-    x: 0.9, y: 4.4, w: 11.53, h: 1.3, align: "right", valign: "middle",
-    fontFace: TITLE_FONT, bold: true, italic: true, fontSize: 18, color: TEAL, rtlMode: true, margin: 0,
-  });
-  addFooter(s, 11);
-}
-
-// =====================================================================
-// SLIDE 12 — מי משתמש במה
-// =====================================================================
-{
-  const s = pres.addSlide();
-  s.background = { color: WHITE };
-  addSlideTitle(s, "מי משתמש במה, בפועל");
-
-  const rows = [
-    { name: "ChatGPT", general: "82%", primary: "—" },
-    { name: "GitHub Copilot", general: "68%", primary: "—" },
-    { name: "Cursor", general: "18%", primary: "24%" },
-    { name: "Claude Code", general: "10%", primary: "28%" },
-  ];
-  const headerY = 1.8;
-  s.addText("כלי", { x: 8.5, y: headerY, w: 3.0, h: 0.5, align: "right", fontFace: TITLE_FONT, bold: true, fontSize: 14, color: MUTED, rtlMode: true, margin: 0 });
-  s.addText("נתח שימוש כללי", { x: 4.5, y: headerY, w: 3.7, h: 0.5, align: "center", fontFace: TITLE_FONT, bold: true, fontSize: 14, color: MUTED, rtlMode: true, margin: 0 });
-  s.addText("ככלי ראשי (Agentic)", { x: 0.6, y: headerY, w: 3.7, h: 0.5, align: "center", fontFace: TITLE_FONT, bold: true, fontSize: 14, color: MUTED, rtlMode: true, margin: 0 });
-
-  rows.forEach((r, i) => {
-    const y = 2.4 + i * 0.85;
-    const highlight = r.name === "Claude Code";
-    if (highlight) {
-      s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: y - 0.08, w: 11.73, h: 0.75, rectRadius: 0.08, fill: { color: TEAL_TINT }, line: { type: "none" } });
-    }
-    s.addText(r.name, { x: 8.5, y, w: 3.0, h: 0.6, align: "right", valign: "middle", fontFace: TITLE_FONT, bold: true, fontSize: 15, color: TEXT_DARK, rtlMode: true, margin: 0 });
-    s.addText(r.general, { x: 4.5, y, w: 3.7, h: 0.6, align: "center", valign: "middle", fontFace: TITLE_FONT, fontSize: 15, color: TEXT_DARK, margin: 0, rtlMode: true });
-    s.addText(r.primary, { x: 0.6, y, w: 3.7, h: 0.6, align: "center", valign: "middle", fontFace: TITLE_FONT, bold: highlight, fontSize: 15, color: highlight ? TEAL : TEXT_DARK, margin: 0, rtlMode: true });
-  });
-
-  s.addText("אין \"כלי אחד נכון\" — יש כלי נגיש, ויש כלי שמוביל בקרב מומחים", {
-    x: 0.6, y: 6.05, w: 12.13, h: 0.5, align: "right",
-    fontFace: TITLE_FONT, bold: true, italic: true, fontSize: 14, color: TEXT_DARK, rtlMode: true, margin: 0,
-  });
-  addSourceCaption(s, "מקור: Stack Overflow Developer Survey 2025 · index.dev 2026");
-  addFooter(s, 12);
-}
-
-// =====================================================================
-// SLIDE 13 — כלים חינמיים
-// =====================================================================
-{
-  const s = pres.addSlide();
-  s.background = { color: WHITE };
-  addSlideTitle(s, "כלים חינמיים להתחלה");
-
-  const cards = [
-    { t: "GitHub Copilot Free", d: "מסלול חינמי רחב, ללא צורך באימות סטודנט", fill: TEAL, tcolor: WHITE },
-    { t: "GitHub Student Pack", d: "הרחבה למי שמאמת סטודנט (זמינות משתנה)", fill: TEAL_TINT, tcolor: TEXT_DARK },
-    { t: "Cursor", d: "IDE מלא, מסלול חינמי מוגבל (מכסת השלמות)", fill: TEAL_TINT, tcolor: TEXT_DARK },
-  ];
-  const xs = [8.9, 4.63, 0.36];
-  cards.forEach((c, i) => {
-    const x = xs[i];
-    s.addShape(pres.ShapeType.roundRect, { x, y: 1.8, w: 3.85, h: 2.6, rectRadius: 0.1, fill: { color: c.fill }, line: { type: "none" } });
-    s.addText(c.t, { x: x + 0.2, y: 2.0, w: 3.45, h: 0.8, align: "right", fontFace: TITLE_FONT, bold: true, fontSize: 16, color: c.tcolor, rtlMode: true, margin: 0 });
-    s.addText(c.d, { x: x + 0.2, y: 2.85, w: 3.45, h: 1.4, align: "right", fontFace: BODY_FONT, fontSize: 12.5, color: c.tcolor, rtlMode: true, margin: 0 });
-  });
-
-  s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 4.75, w: 12.13, h: 1.1, rectRadius: 0.1, fill: { color: WARN_TINT }, line: { type: "none" } });
-  iconCircle(s, 11.3, 4.9, 0.5, "!", WARN, WHITE);
-  s.addText("שוק הכלים משתנה מהר — ראו מקרה Gemini CLI → Antigravity משיעור 1", {
-    x: 0.9, y: 4.85, w: 10.2, h: 0.8, align: "right", valign: "middle",
-    fontFace: TITLE_FONT, bold: true, fontSize: 14, color: TEXT_DARK, rtlMode: true, margin: 0,
-  });
-  addFooter(s, 13);
-}
-
-// =====================================================================
-// SLIDE 14 — Best Practices (1)
-// =====================================================================
-{
-  const s = pres.addSlide();
-  s.background = { color: WHITE };
-  addSlideTitle(s, "Best Practices לעבודה עם כלי Agentic (1)");
-
-  const rows = [
-    { h: "הנחיות ברורות וספציפיות", d: "“תוסיף התחברות” עמום; “תוסיף התחברות עם Google OAuth, עם redirect לדף הבית” ברור" },
-    { h: "צעדים קטנים", d: "משימה גדולה מתפרקת לצעדים — קל יותר לבדוק תוצאה של צעד קטן" },
-    { h: "בדיקת כל Diff", d: "לפני אישור שינוי, קוראים אותו. תמיד, בלי יוצא מן הכלל" },
-  ];
-  rows.forEach((r, i) => {
-    const y = 1.7 + i * 1.5;
-    iconCircle(s, 11.3, y, 0.6, i + 1, TEAL, WHITE);
-    s.addText(r.h, { x: 0.6, y, w: 10.4, h: 0.4, align: "right", fontFace: TITLE_FONT, bold: true, fontSize: 18, color: TEXT_DARK, rtlMode: true, margin: 0 });
-    s.addText(r.d, { x: 0.6, y: y + 0.42, w: 10.4, h: 0.8, align: "right", fontFace: BODY_FONT, fontSize: 14, color: MUTED, rtlMode: true, margin: 0 });
-  });
-  addFooter(s, 14);
-}
-
-// =====================================================================
-// SLIDE 15 — Best Practices (2)
-// =====================================================================
-{
-  const s = pres.addSlide();
-  s.background = { color: WHITE };
-  addSlideTitle(s, "Best Practices לעבודה עם כלי Agentic (2)");
-
-  const rows = [
-    { h: "Git כרשת ביטחון", d: "Commit לפני כל ניסוי משמעותי — תמיד אפשר לחזור אחורה" },
-    { h: "לא לסמוך בעיוורון", d: "אם משהו נראה “יותר מדי חכם” או משתמש בפונקציה לא מוכרת — בודקים שהיא קיימת" },
-    { h: "איטרציה, לא ניסיון יחיד", d: "אם התוצאה הראשונה לא מושלמת, מבקשים תיקון ממוקד — לא מתחילים מאפס" },
-  ];
-  rows.forEach((r, i) => {
-    const y = 1.7 + i * 1.5;
-    iconCircle(s, 11.3, y, 0.6, i + 4, TEAL, WHITE);
-    s.addText(r.h, { x: 0.6, y, w: 10.4, h: 0.4, align: "right", fontFace: TITLE_FONT, bold: true, fontSize: 18, color: TEXT_DARK, rtlMode: true, margin: 0 });
-    s.addText(r.d, { x: 0.6, y: y + 0.42, w: 10.4, h: 0.8, align: "right", fontFace: BODY_FONT, fontSize: 14, color: MUTED, rtlMode: true, margin: 0 });
-  });
-  addFooter(s, 15);
-}
-
-// =====================================================================
-// SLIDE 16 — המחיר של דילוג על הכללים
-// =====================================================================
-{
-  const s = pres.addSlide();
-  s.background = { color: DARK };
-
-  s.addText("המחיר של דילוג על הכללים", {
-    x: 0.6, y: 0.5, w: 12.13, h: 0.7, align: "right",
-    fontFace: TITLE_FONT, bold: true, fontSize: 28, color: WHITE, rtlMode: true, margin: 0,
-  });
-
-  s.addShape(pres.ShapeType.roundRect, { x: 6.93, y: 1.7, w: 5.6, h: 2.8, rectRadius: 0.12, fill: { color: DARK2 }, line: { type: "none" } });
-  s.addText("30-41%", { x: 6.93, y: 1.85, w: 5.6, h: 1.3, align: "center", fontFace: TITLE_FONT, bold: true, fontSize: 44, color: WARN, margin: 0, rtlMode: true });
-  s.addText("יותר חוב טכני כשאין תהליך מסודר", { x: 7.2, y: 3.1, w: 5.1, h: 1.2, align: "center", fontFace: BODY_FONT, fontSize: 14, color: WHITE, rtlMode: true, margin: 0 });
-
-  s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 1.7, w: 5.6, h: 2.8, rectRadius: 0.12, fill: { color: TEAL }, line: { type: "none" } });
-  s.addText("1.7x", { x: 0.6, y: 1.85, w: 5.6, h: 1.3, align: "center", fontFace: TITLE_FONT, bold: true, fontSize: 44, color: DARK, margin: 0, rtlMode: true });
-  s.addText("יותר בעיות ב-PR שנכתב ב-AI לעומת PR אנושי", { x: 0.85, y: 3.1, w: 5.1, h: 1.2, align: "center", fontFace: BODY_FONT, fontSize: 14, color: DARK, rtlMode: true, margin: 0 });
-
-  s.addText("ה-Best Practices האלה הם לא בירוקרטיה — הם ההבדל בין \"AI שעוזר\" ל\"AI שיוצר בעיה גדולה יותר\".", {
-    x: 0.6, y: 4.9, w: 12.13, h: 0.9, align: "right",
-    fontFace: TITLE_FONT, bold: true, italic: true, fontSize: 17, color: WHITE, rtlMode: true, margin: 0,
-  });
-  addSourceCaption(s, "מקור: DORA — ROI of AI-Assisted Software Development, 2026");
-  addFooter(s, 16, true);
-}
-
-// =====================================================================
-// SLIDE 17 — הדגמה חיה
-// =====================================================================
-{
-  const s = pres.addSlide();
-  s.background = { color: DARK };
-  s.addText("הדגמה חיה", { x: 0.6, y: 0.5, w: 12.13, h: 0.6, align: "center", fontFace: BODY_FONT, italic: true, fontSize: 16, color: TEAL, margin: 0, rtlMode: true });
-  s.addText("פותחים session אמיתי על פרויקט קיים", { x: 0.6, y: 1.2, w: 12.13, h: 1.2, align: "center", fontFace: TITLE_FONT, bold: true, fontSize: 34, color: WHITE, rtlMode: true, margin: 0 });
-  s.addText("ראו demo/prompt.md להוראות המלאות", { x: 0.6, y: 2.35, w: 12.13, h: 0.5, align: "center", fontFace: BODY_FONT, italic: true, fontSize: 15, color: ICE, rtlMode: true, margin: 0 });
-  addImagePlaceholder(s, 3.5, 3.15, 6.33, 3.6, "[תמונה: מסך שיתוף — Diff מוצג לפני אישור בכלי ה-AI]", true);
-  addFooter(s, 17, true);
-}
-
-// =====================================================================
-// SLIDE 18 — עוברים לתרגול
-// =====================================================================
-{
-  const s = pres.addSlide();
-  s.background = { color: TEAL };
-  s.addText("עוברים לתרגול", { x: 0.6, y: 0.6, w: 12.13, h: 0.6, align: "center", fontFace: BODY_FONT, italic: true, fontSize: 16, color: DARK, margin: 0, rtlMode: true });
-  s.addText("45 דקות: הקמת סביבת עבודה", { x: 0.6, y: 1.3, w: 12.13, h: 1.1, align: "center", fontFace: TITLE_FONT, bold: true, fontSize: 32, color: WHITE, rtlMode: true, margin: 0 });
+  s.addShape(pres.ShapeType.line, { x: 0.6, y: 4.0, w: 12.13, h: 0, line: { color: PH_BORDER, width: 0.75 } });
 
   s.addText(
     [
-      { text: "• VS Code + Git מותקנים", options: { rtlMode: true, breakLine: true } },
-      { text: "• Repository חדש ב-GitHub", options: { rtlMode: true, breakLine: true } },
-      { text: "• כלי AI חינמי מחובר", options: { rtlMode: true, breakLine: true } },
-      { text: "• Commit ראשון נדחף בהצלחה", options: { rtlMode: true, breakLine: false } },
+      { text: "שבוע הבא: ", options: { bold: true, rtlMode: true } },
+      { text: "Context Engineering — איך \"מזינים\" לכלי את מה שהוא צריך לדעת על הפרויקט שלכם", options: { rtlMode: true, breakLine: true } },
     ],
-    { x: 0.9, y: 2.9, w: 5.6, h: 2.2, align: "right", fontFace: BODY_FONT, fontSize: 16, color: WHITE, rtlMode: true, paraSpaceAfter: 10, margin: 0 }
+    { x: 0.6, y: 4.2, w: 12.13, h: 0.6, align: "right", fontFace: TITLE_FONT, fontSize: 17, color: TEXT_DARK, rtlMode: true, margin: 0 }
   );
-  addImagePlaceholder(s, 6.9, 2.9, 5.53, 3.2, "[תמונה: מסך טרמינל אחרי git push מוצלח]", true);
-  s.addText("ראו exercises.md ו-solutions.md לפירוט מלא", { x: 0.6, y: 6.6, w: 12.13, h: 0.4, align: "center", fontFace: BODY_FONT, italic: true, fontSize: 13, color: DARK, rtlMode: true, margin: 0 });
+
+  s.addText(
+    "בהמשך הקורס: עבודה עם קוד קיים (שבוע 4) · Agents (שבוע 5) · תכנון לפני קוד (שבוע 6) · עד פריסה מלאה בענן ואבטחה (שבועות 11-12)",
+    { x: 0.6, y: 4.9, w: 12.13, h: 0.5, align: "right", fontFace: BODY_FONT, italic: true, fontSize: 13, color: MUTED, rtlMode: true, margin: 0 }
+  );
+
+  addFooter(s);
 }
 
 // =====================================================================
-// SLIDE 19 — סיכום
-// =====================================================================
-{
-  const s = pres.addSlide();
-  s.background = { color: DARK };
-  s.addText("סיכום", { x: 0.6, y: 0.5, w: 12.13, h: 0.8, align: "right", fontFace: TITLE_FONT, bold: true, fontSize: 34, color: WHITE, rtlMode: true, margin: 0 });
-
-  const takeaways = [
-    "VS Code + Git + GitHub = השולחן שעליו עובדים",
-    "Agentic ≠ Autocomplete — זה שותף לביצוע משימה",
-    "יש נקודת כניסה חינמית — אין תירוץ לא להתחיל",
-  ];
-  takeaways.forEach((t, i) => {
-    const y = 1.7 + i * 1.05;
-    iconCircle(s, 11.3, y, 0.55, i + 1, TEAL, WHITE);
-    s.addText(t, { x: 0.6, y, w: 10.4, h: 0.7, align: "right", valign: "middle", fontFace: TITLE_FONT, bold: true, fontSize: 18, color: WHITE, rtlMode: true, margin: 0 });
-  });
-
-  s.addShape(pres.ShapeType.roundRect, { x: 0.6, y: 5.6, w: 12.13, h: 1.3, rectRadius: 0.1, fill: { color: TEAL }, line: { type: "none" } });
-  s.addText("שבוע הבא", { x: 0.9, y: 5.78, w: 11.53, h: 0.4, align: "right", fontFace: BODY_FONT, italic: true, fontSize: 13, color: DARK, rtlMode: true, margin: 0 });
-  s.addText("Context Engineering — איך ״מזינים״ לכלי את מה שהוא צריך לדעת", { x: 0.9, y: 6.15, w: 11.53, h: 0.6, align: "right", fontFace: TITLE_FONT, bold: true, fontSize: 18, color: WHITE, rtlMode: true, margin: 0 });
-}
-
-// =====================================================================
-// SLIDE 20 — מקורות
+// שקף 24 — מקורות
 // =====================================================================
 {
   const s = pres.addSlide();
   s.background = { color: WHITE };
-  addSlideTitle(s, "מקורות");
+  addTitle(s, "מקורות");
 
   s.addText(
-    [
-      { text: "Kinsta & Skillademia — GitHub Statistics 2026", options: { rtlMode: true, breakLine: true } },
-      { text: "DigitalApplied & MorphLLM — Benchmark Guides 2026 (SWE-bench, Terminal-Bench)", options: { rtlMode: true, breakLine: true } },
-      { text: "Stack Overflow Developer Survey 2025", options: { rtlMode: true, breakLine: true } },
-      { text: "index.dev — Developer Productivity Statistics 2026", options: { rtlMode: true, breakLine: true } },
-      { text: "DORA — ROI of AI-Assisted Software Development, 2026", options: { rtlMode: true, breakLine: false } },
-    ],
-    { x: 0.6, y: 1.8, w: 12.13, h: 3.0, align: "right", fontFace: BODY_FONT, fontSize: 16, color: TEXT_DARK, rtlMode: true, paraSpaceAfter: 14, margin: 0 }
+    "Kinsta & Skillademia — GitHub Statistics 2026 · DigitalApplied & MorphLLM — Benchmark Guides 2026 · Stack Overflow Developer Survey 2025 · index.dev 2026 · DORA — ROI of AI-Assisted Software Development, 2026",
+    { x: 0.6, y: 1.6, w: 12.13, h: 1.4, align: "right", fontFace: BODY_FONT, fontSize: 15, color: TEXT_DARK, rtlMode: true, margin: 0 }
   );
 
-  s.addText("פירוט מלא וקישורים: references.md — כל הנתונים נבדקו ביולי 2026 ועשויים להשתנות", {
-    x: 0.6, y: 5.7, w: 12.13, h: 0.6, align: "right",
-    fontFace: BODY_FONT, italic: true, fontSize: 13, color: MUTED, rtlMode: true, margin: 0,
-  });
-  addFooter(s, 20);
+  s.addText(
+    "פירוט מלא: references.md — כל הנתונים נבדקו ביולי 2026 ועשויים להשתנות",
+    { x: 0.6, y: 3.0, w: 12.13, h: 0.4, align: "right", fontFace: BODY_FONT, italic: true, fontSize: 12, color: MUTED, rtlMode: true, margin: 0 }
+  );
+
+  addFooter(s);
 }
 
 // =====================================================================

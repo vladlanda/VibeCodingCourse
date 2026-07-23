@@ -50,12 +50,19 @@ function runs(text, base = {}) {
 // תלות בכיווניות התוכן שאחריו.
 function bulletRuns(bullets, base = {}) {
   const out = [];
+  const bulletOpt = { code: "2022", indent: 18 };
   bullets.forEach((b, i) => {
     const r = runs(b, base);
-    r[0] = {
-      ...r[0],
-      options: { ...r[0].options, bullet: { code: "2022", indent: 18 } },
-    };
+    // הערה קריטית: כשבולט מכיל טקסט מודגש (**...**) בתוך המשפט, runs() מפרק
+    // אותו למספר ריצות (runs). pptxgenjs פולט <a:pPr> נפרד לכל ריצה שמקבלת
+    // options שונים - וכל <a:pPr> כזה שאין לו bullet מפורש מקבל <a:buNone/>
+    // אוטומטית. ה-<a:buNone/> הזה "מנצח" את ה-<a:buChar/> הקודם ב-render
+    // בפועל (למשל ב-LibreOffice), והבולט נעלם! לכן חובה להצמיד את אותו
+    // אובייקט bullet לכל ריצה בפסקה, לא רק לריצה הראשונה - כדי שכל ה-pPr
+    // שנוצרים יהיו זהים ועקביים.
+    r.forEach((run) => {
+      run.options = { ...run.options, bullet: bulletOpt };
+    });
     r[r.length - 1] = {
       ...r[r.length - 1],
       options: { ...r[r.length - 1].options, breakLine: i < bullets.length - 1 },
