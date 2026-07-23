@@ -100,20 +100,33 @@ function addBullets(slide, bullets, y = 1.65, h = 3.6, opts = {}) {
   });
 }
 
+// הערה קריטית: מיקום ה"מקור:" בתחתית לא יכול להיות קבוע (y=6.75 קשיח) -
+// כי טקסט "מה עושים בפועל" משתנה באורך בין שקפים, ופעמים רבות עוטף לשתי
+// שורות. עם מיקום קבוע, שקף עם bestPractice ארוך (שתי שורות) "מקור:"
+// נדרס/מתנגש איתו בפועל ב-render. לכן addBestPractice מעריך כמה שורות
+// הטקסט ידרוש (לפי אורך התו ורוחב התיבה), ומחזיר את מיקום ה-Y בפועל
+// שבו הטקסט מסתיים - כדי ש-addSourceCaption תמיד תמוקם מתחתיו, לא על גביו.
+function estimateLines(text, charsPerLine) {
+  return Math.max(1, Math.ceil(text.length / charsPerLine));
+}
+
 function addBestPractice(slide, text, y) {
   slide.addShape(pres.ShapeType.line, {
     x: 0.6, y, w: 12.13, h: 0, line: { color: PH_BORDER, width: 0.75 },
   });
   const withLabel = "✔ מה עושים בפועל: " + text;
+  const lines = estimateLines(withLabel, 108);
+  const textH = Math.max(0.5, lines * 0.34);
   slide.addText(runs(withLabel, { fontFace: TITLE_FONT, fontSize: 17, color: TEAL }), {
-    x: 0.6, y: y + 0.1, w: 12.13, h: 0.95,
+    x: 0.6, y: y + 0.1, w: 12.13, h: textH,
     align: "right", rtlMode: true, margin: 0,
   });
+  return y + 0.1 + textH;
 }
 
-function addSourceCaption(slide, text) {
+function addSourceCaption(slide, text, y = 6.75) {
   slide.addText("מקור: " + text, {
-    x: 0.6, y: 6.75, w: 12.13, h: 0.3,
+    x: 0.6, y, w: 12.13, h: 0.3,
     align: "right", fontFace: BODY_FONT, italic: true, fontSize: 10, color: MUTED, rtlMode: true, margin: 0,
   });
 }
@@ -136,15 +149,25 @@ function contentSlide({ title, question, bullets, bestPractice, source }) {
   if (question) addQuestion(s, question);
 
   const bulletsY = question ? 1.65 : 1.35;
-  const bulletsH = bestPractice ? 4.3 : 5.2;
+  const maxBulletsH = bestPractice ? 4.3 : 5.2;
+  // מגבלת הגובה הפנוי לפני הפוטר (7.1): מעריכים מראש כמה מקום bestPractice
+  // ו-source ידרשו בפועל (bestPractice עלול לעטוף לשתי שורות בתוכן צפוף
+  // כמו מקרי-בוחן), ומצמצמים את bulletsH בהתאם - כדי שלא יתנגשו עם הפוטר.
+  let reservedBottom = 0.15;
+  let bpLines = 1;
+  if (bestPractice) {
+    bpLines = estimateLines("✔ מה עושים בפועל: " + bestPractice, 108);
+    reservedBottom += 0.1 + bpLines * 0.34 + 0.12;
+  }
+  if (source) reservedBottom += 0.32;
+  const bulletsH = Math.min(maxBulletsH, 7.1 - bulletsY - reservedBottom);
   addBullets(s, bullets, bulletsY, bulletsH);
 
   let nextY = bulletsY + bulletsH + 0.15;
   if (bestPractice) {
-    addBestPractice(s, bestPractice, nextY);
-    nextY += 1.0;
+    nextY = addBestPractice(s, bestPractice, nextY) + 0.12;
   }
-  if (source) addSourceCaption(s, source);
+  if (source) addSourceCaption(s, source, Math.min(nextY, 6.85));
   addFooter(s);
   return s;
 }
@@ -347,6 +370,21 @@ contentSlide({
 });
 
 // =====================================================================
+// שקף 8.5 — פעילות בזוגות: Autocomplete או Agentic
+// =====================================================================
+contentSlide({
+  title: "פעילות בזוגות: Autocomplete או Agentic?",
+  bullets: [
+    "**המשימה (2-3 דקות בזוגות):** לכל אחת מהמשימות הבאות, קבעו יחד — מספיק Autocomplete בסיסי, או צריך כלי Agentic מלא? נמקו.",
+    "**1.** להשלים שם משתנה שכבר התחלתם להקליד",
+    "**2.** להוסיף מסך \"התחברות\" שלם לאפליקציה, כולל שמירה במסד נתונים",
+    "**3.** לתקן שגיאת הזחה (Indentation) בשורה בודדת",
+    "**4.** לעדכן פונקציה אחת בעשרה קבצים שונים בפרויקט, בעקביות",
+  ],
+  bestPractice: "התשובה הצפויה: 1+3 = Autocomplete מספיק (שינוי נקודתי, הקשר מקומי); 2+4 = דורש Agentic (משימה שמשתרעת על כמה קבצים ודורשת החלטות). אם זוג מתלבט על 4 — זה בדיוק הרגע להסביר שגם \"עדכון עקבי\" הוא סוג של החלטה שדורשת הבנת הקשר רחב, לא רק השלמת טקסט.",
+});
+
+// =====================================================================
 // שקף 9 — איך מודדים "כמה טוב" כלי אג'נטי
 // =====================================================================
 contentSlide({
@@ -372,6 +410,35 @@ contentSlide({
   ],
   bestPractice: "מספר בנצ'מארק בודד הוא נקודת התחלה לבדיקה, לא מסקנה סופית.",
   source: "DigitalApplied, MorphLLM — 2026",
+});
+
+// =====================================================================
+// שקף 10.5 — לוחות תוצאות חיים
+// =====================================================================
+contentSlide({
+  title: "לוחות תוצאות חיים — לפתיחה בכיתה",
+  question: "השאלה: איך רואים את זה לא כטקסט על שקף, אלא כמשהו אמיתי ומתעדכן?",
+  bullets: [
+    "לוח SWE-bench Verified (התוצאות המדויקות שראינו בשקף הקודם): **swebench.com/verified.html**",
+    "לוח Terminal-Bench 2.1: **tbench.ai/leaderboard/terminal-bench/2.1**",
+    "שני הלוחות מתעדכנים באופן שוטף — המספר שראיתם בשקף הקודם עשוי כבר להיות לא הכי עדכני ברגע שאתם קוראים את זה",
+  ],
+  bestPractice: "המרצה פותח את שני הלינקים בדפדפן מול הכיתה. **פעילות (הרימו יד):** לפני שפותחים — מי בטוח שהמודל שהיה מוביל בזמן הכנת השקף עדיין מוביל היום? זו ההדגמה הכי טובה לאזהרת המתודולוגיה מהשקף הקודם: המספרים משתנים ממש מתחת לרגליים.",
+});
+
+// =====================================================================
+// שקף 10.6 — בנצ'מארק שני: METR Time Horizon
+// =====================================================================
+contentSlide({
+  title: "בנצ'מארק שני: לא רק \"עובד/לא עובד\"",
+  question: "השאלה: SWE-bench בודק אם הפתרון נכון — אבל איך בודקים כמה זמן כלי יכול להתמיד במשימה בלי עזרה?",
+  bullets: [
+    "**METR** (ארגון מחקר שמפרסם מדדי יכולת עצמאית של סוכני AI) מודד **\"אופק זמן\" (Time Horizon)**: משך המשימה (לפי זמן שלוקח למומחה אנושי) שבו למודל יש 50% סיכוי להצליח, ללא התערבות",
+    "זה שונה מ-SWE-bench: שם בודקים \"האם הפתרון הספציפי הזה נכון\", כאן בודקים \"כמה זמן הכלי יכול להתמיד לבד לפני שהוא נתקע או טועה\"",
+    "**הנתון:** אופק הזמן הכפיל את עצמו בערך כל 4 חודשים בשנים האחרונות; במודלים המובילים באמצע 2026 האופק הגיע לכ-12 שעות (לשם השוואה: Claude 3.7 Sonnet, מ-2025, עמד על כ-50 דקות בלבד)",
+  ],
+  bestPractice: "שני סוגי הבנצ'מארק משלימים זה את זה — אחד אומר \"האם זה נכון\", השני אומר \"כמה הוא יכול להתמיד לבד\". כשמעריכים כלי AI (בקורס הזה או בעתיד המקצועי שלכם), שווה לשאול את שתי השאלות, לא רק אחת.",
+  source: "metr.org/time-horizons",
 });
 
 // =====================================================================
@@ -417,7 +484,7 @@ contentSlide({
     "(ChatGPT ו-Copilot לא נמדדו בקטגוריית \"כלי ראשי אג'נטי\" כי הם משמשים בעיקר כעזר כללי, לא כסביבת עבודה אג'נטית מלאה)",
   ],
   bestPractice: "אין \"כלי אחד נכון\" — הקורס מלמד עם Claude Code כי הוא מייצג היטב את העבודה האג'נטית המלאה, אבל ה-Workflow שתלמדו עובד בכל אחד מהכלים האלה.",
-  source: "Stack Overflow Developer Survey (סקר שנתי בקרב מפתחים, מבית אתר Stack Overflow) 2025 · index.dev 2026",
+  source: "Stack Overflow Developer Survey (סקר שנתי בקרב מפתחים, מבית אתר Stack Overflow) 2025 — survey.stackoverflow.co/2025 · index.dev 2026",
 });
 
 // =====================================================================
@@ -426,11 +493,11 @@ contentSlide({
 contentSlide({
   title: "כלים חינמיים להתחלה",
   bullets: [
-    "**GitHub Copilot Free** — מסלול חינמי רחב, ללא צורך באימות סטודנט, זמין ישירות ב-VS Code — נקודת הכניסה הפשוטה ביותר",
-    "**GitHub Student Developer Pack** — חבילת הטבות לסטודנטים מאומתים; הרשמה חדשה להטבת **Copilot Student** (מסלול מורחב יותר מ-Copilot Free הרגיל) מושהית מאפריל 2026 בשל עומס על תשתית agentic — מי שכבר אומת קודם ממשיך לקבל אותה, וחברי Pack חדשים מקבלים כרגע את Copilot Free הרגיל",
-    "**Cursor** — IDE מלא מבוסס AI, עם מסלול חינמי מוגבל (מכסת השלמות בסיסית)",
+    "**GitHub Copilot Free** — מסלול חינמי רחב, ללא צורך באימות סטודנט, זמין ישירות ב-VS Code — נקודת הכניסה הפשוטה ביותר. כולל גם מצב Agent (לא רק השלמות), עם בחירת מודל אוטומטית ומכסה חודשית (docs.github.com/.../plans)",
+    "**GitHub Student Developer Pack** — חבילת הטבות לסטודנטים מאומתים; הרשמה חדשה להטבת **Copilot Student** (מסלול מורחב יותר מ-Copilot Free הרגיל) מושהית מאפריל 2026 בשל עומס על תשתית Agentic — מי שכבר אומת קודם ממשיך לקבל אותה, וחברי Pack חדשים מקבלים כרגע את Copilot Free הרגיל (education.github.com/pack)",
+    "**Cursor** — IDE מלא מבוסס AI, עם מסלול חינמי מוגבל (Agent requests מוגבל + מכסת השלמות בסיסית, בלי כרטיס אשראי) — cursor.com/pricing",
   ],
-  bestPractice: "שוק הכלים והמסלולים החינמיים משתנה מהר מאוד — בשיעור 1 ראינו איך Gemini CLI החינמי נסגר תוך פחות משנה. תמיד בודקים סטטוס עדכני קרוב למועד השימוש בפועל.",
+  bestPractice: "שוק הכלים והמסלולים החינמיים משתנה מהר מאוד — בשיעור 1 ראינו איך Gemini CLI החינמי נסגר תוך פחות משנה. **פעילות (2 דקות):** המרצה פותח את שני הלינקים (cursor.com/pricing ו-docs.github.com/.../plans) בכיתה בזמן אמת — האם המחירים/המכסות עדיין תואמים למה שכתוב כאן? זו לא רק הדגמה, זו ההרגל המקצועי עצמו: תמיד בודקים סטטוס עדכני קרוב למועד השימוש בפועל.",
 });
 
 // =====================================================================
@@ -460,6 +527,17 @@ contentSlide({
 });
 
 // =====================================================================
+// שקף 16.5 — תרגול בזוגות: לתקן הנחיה מעורפלת
+// =====================================================================
+contentSlide({
+  title: "תרגול בזוגות: לתקן הנחיה מעורפלת",
+  bullets: [
+    "**המשימה (3 דקות בזוגות):** אחד/אחת בזוג כותב/ת בכוונה הנחיה מעורפלת לכלי AI (למשל: \"תשפר את הקוד\", \"תתקן את הבאג\", \"תוסיף אבטחה\"). השני/ה כותב/ת אותה מחדש לפי כלל 1 (הנחיות ברורות וספציפיות) — כמו הדוגמה מהשקף הקודם.",
+  ],
+  bestPractice: "אחרי 3 דקות, 2-3 זוגות מקריאים בקול את ההנחיה ה\"לפני\" וה\"אחרי\". מטרת התרגיל: להרגיש בעצמכם למה כלי AI \"מנחש\" כשההנחיה עמומה — לא רק לשמוע את זה כעצה.",
+});
+
+// =====================================================================
 // שקף 17 — המחיר של דילוג על הכללים
 // =====================================================================
 contentSlide({
@@ -470,6 +548,21 @@ contentSlide({
   ],
   bestPractice: "ה-Best Practices משני השקפים הקודמים הם לא בירוקרטיה — הם ההבדל בין \"AI שעוזר\" ל\"AI שיוצר בעיה גדולה יותר ממה שפתר\".",
   source: "DORA — ROI of AI-Assisted Software Development, 2026",
+});
+
+// =====================================================================
+// שקף 17.5 — מקרה בוחן: Amazon
+// =====================================================================
+contentSlide({
+  title: "מקרה בוחן: כשמדלגים על Review בפועל",
+  question: "השאלה: זה נשמע תיאורטי — האם יש דוגמה אמיתית וגדולה למחיר הזה?",
+  bullets: [
+    "במרץ 2026, אתר המסחר של **Amazon** עבר שני תקלות חמורות תוך שלושה ימים: ב-2 במרץ קריסה של כ-6 שעות (כ-1.6 מיליון שגיאות אתר, כ-120,000 הזמנות אבודות), וב-5 במרץ קריסה חמורה עוד יותר — ירידה של 99% בהזמנות בצפון אמריקה ביחס לקצב הרגיל, כ-6.3 מיליון הזמנות אבודות",
+    "לפי דיווחי Amazon עצמה, הגורם המרכזי לתקלה השנייה היה **שינוי קוד שעבר לייצור בלי תהליך אישור ותיעוד פורמלי** — בדיוק סוג הדילוג-על-Review שדיברנו עליו. Amazon הבהירה שרק תקלה אחת בכלל נגעה לכלי AI, ושם הסיבה הייתה תקלה אנושית בתהליך",
+    "**התגובה של Amazon:** \"איפוס בטיחות קוד\" בן 90 יום על כ-335 מערכות קריטיות — כל שינוי דורש עכשיו אישור שני אנשים, תיעוד פורמלי, ובדיקות אוטומטיות מחמירות יותר; שינויי קוד שנוצרו בעזרת AI דורשים ספציפית גם חתימה של מהנדס בכיר",
+  ],
+  bestPractice: "גם ענקית כמו Amazon נדרשה לחזק בדיוק את הכללים שלמדתם היום — לא כי AI \"רע\", אלא כי דילוג על Review הוא הסיכון האמיתי, עם או בלי AI.",
+  source: "Yahoo Tech, Digital Trends — מרץ 2026",
 });
 
 // =====================================================================
@@ -602,13 +695,13 @@ contentSlide({
   addTitle(s, "מקורות");
 
   s.addText(
-    "Kinsta & Skillademia — GitHub Statistics 2026 · DigitalApplied & MorphLLM — Benchmark Guides 2026 · Stack Overflow Developer Survey 2025 · index.dev 2026 · DORA — ROI of AI-Assisted Software Development, 2026",
-    { x: 0.6, y: 1.6, w: 12.13, h: 1.4, align: "right", fontFace: BODY_FONT, fontSize: 15, color: TEXT_DARK, rtlMode: true, margin: 0 }
+    "Kinsta & Skillademia — GitHub Statistics 2026 · DigitalApplied & MorphLLM — Benchmark Guides 2026 · swebench.com · tbench.ai · metr.org/time-horizons · Stack Overflow Developer Survey 2025 (survey.stackoverflow.co/2025) · index.dev 2026 · DORA — ROI of AI-Assisted Software Development, 2026 · cursor.com/pricing · docs.github.com/copilot/plans · education.github.com/pack · Yahoo Tech / Digital Trends (מקרה Amazon, מרץ 2026)",
+    { x: 0.6, y: 1.5, w: 12.13, h: 2.6, align: "right", fontFace: BODY_FONT, fontSize: 15, color: TEXT_DARK, rtlMode: true, margin: 0 }
   );
 
   s.addText(
     "פירוט מלא: references.md — כל הנתונים נבדקו ביולי 2026 ועשויים להשתנות",
-    { x: 0.6, y: 3.0, w: 12.13, h: 0.4, align: "right", fontFace: BODY_FONT, italic: true, fontSize: 12, color: MUTED, rtlMode: true, margin: 0 }
+    { x: 0.6, y: 4.3, w: 12.13, h: 0.4, align: "right", fontFace: BODY_FONT, italic: true, fontSize: 12, color: MUTED, rtlMode: true, margin: 0 }
   );
 
   addFooter(s);
