@@ -131,6 +131,387 @@ function addSourceCaption(slide, text, y = 6.75) {
   });
 }
 
+// כיתוב מתחת לאיור מקורי (וקטורי, לא תמונת אינטרנט) - "איור:" ולא "מקור:",
+// כי אין כאן ציטוט חיצוני, רק תרשים שנבנה ישירות בקוד (זהה לשיטת שיעור 1).
+function addDiagramCaption(slide, text, y) {
+  slide.addText("איור: " + text, {
+    x: 0.6, y, w: 12.13, h: 0.3,
+    align: "right", fontFace: BODY_FONT, italic: true, fontSize: 10, color: MUTED, rtlMode: true, margin: 0,
+  });
+}
+
+// ---------- דיאגרמת מסך טרמינל מדומה לשקף הכותרת (זהה בעיצובה לשיעור 1,
+// עם פקודות רלוונטיות לשיעור 2). איור וקטורי מקורי - לא צילום מסך.
+function addTerminalMockup(slide, x, y, w, h) {
+  const DARK = "1B1F3B";
+  slide.addShape(pres.ShapeType.roundRect, {
+    x, y, w, h, rectRadius: 0.06,
+    fill: { color: DARK }, line: { color: PH_BORDER, width: 0.5 },
+  });
+  const barH = Math.min(0.28, h * 0.22);
+  const dotColors = ["FF5F56", "FFBD2E", "27C93F"];
+  dotColors.forEach((c, i) => {
+    slide.addShape(pres.ShapeType.ellipse, {
+      x: x + 0.14 + i * 0.22, y: y + barH / 2 - 0.05, w: 0.1, h: 0.1,
+      fill: { color: c }, line: { type: "none" },
+    });
+  });
+  slide.addText("my-vibe-coding-env — zsh", {
+    x, y, w, h: barH, align: "center", valign: "middle", margin: 0,
+    fontFace: BODY_FONT, fontSize: 9, color: "8A8FB0",
+  });
+  const lines = [
+    { t: "$ git clone github.com/you/my-vibe-coding-env", c: "FFFFFF" },
+    { t: "$ code .", c: "FFFFFF" },
+    { t: "> מבקשים מכלי ה-AI ליצור hello.py...", c: "5FD9C6" },
+    { t: "✓ נוצר, נבדק, ונדחף ל-GitHub ▍", c: "27C93F" },
+  ];
+  const bodyY = y + barH + 0.08;
+  const lineH = (h - barH - 0.12) / lines.length;
+  lines.forEach((ln, i) => {
+    slide.addText(ln.t, {
+      x: x + 0.2, y: bodyY + i * lineH, w: w - 0.4, h: lineH,
+      align: /^[$>✓]/.test(ln.t) ? "left" : "right",
+      valign: "middle", margin: 0, rtlMode: !/^[$]/.test(ln.t),
+      fontFace: "Courier New", fontSize: 10, color: ln.c,
+    });
+  });
+}
+
+// ---------- דיאגרמת השוואה: Notepad מול IDE. שתי כרטיסיות זו לצד זו -
+// ימין (RTL="ראשון") = Notepad עם שורה בודדת של טקסט פשוט; שמאל = IDE
+// עם 3 "פסים" קטנים (עורך/טרמינל/דיבאגר) שממחישים ריבוי-פאנלים.
+// איור וקטורי מקורי.
+function addIDEComparisonDiagram(slide, x, y, w, h) {
+  const cardW = (w - 0.4) / 2;
+  const cardH = h;
+  const rightX = x + w - cardW; // Notepad (RTL: ראשון/ימני)
+  const leftX = x; // IDE
+
+  slide.addShape(pres.ShapeType.roundRect, {
+    x: rightX, y, w: cardW, h: cardH, rectRadius: 0.06,
+    fill: { color: PH_BG }, line: { color: PH_BORDER, width: 1.25 },
+  });
+  slide.addText("Notepad", {
+    x: rightX, y: y + 0.08, w: cardW, h: 0.3, align: "center",
+    fontFace: TITLE_FONT, bold: true, fontSize: 12, color: MUTED, margin: 0,
+  });
+  slide.addShape(pres.ShapeType.rect, {
+    x: rightX + 0.3, y: y + 0.5, w: cardW - 0.6, h: h - 0.65,
+    fill: { color: WHITE }, line: { color: PH_BORDER, width: 0.75 },
+  });
+  slide.addText("טקסט רגיל, בלי צבע ובלי עזרה", {
+    x: rightX + 0.3, y: y + 0.5, w: cardW - 0.6, h: h - 0.65, margin: 4,
+    align: "center", valign: "middle",
+    fontFace: "Courier New", fontSize: 9, color: MUTED, rtlMode: true,
+  });
+
+  slide.addShape(pres.ShapeType.roundRect, {
+    x: leftX, y, w: cardW, h: cardH, rectRadius: 0.06,
+    fill: { color: "1B1F3B" }, line: { color: TEAL, width: 1.25 },
+  });
+  slide.addText("VS Code (IDE)", {
+    x: leftX, y: y + 0.08, w: cardW, h: 0.3, align: "center",
+    fontFace: TITLE_FONT, bold: true, fontSize: 12, color: WHITE, margin: 0,
+  });
+  const panels = [
+    { label: "עורך קוד צבעוני", frac: 0.55 },
+    { label: "טרמינל מובנה", frac: 0.25 },
+    { label: "איתור באגים", frac: 0.2 },
+  ];
+  let py = y + 0.48;
+  const totalH = h - 0.6;
+  panels.forEach((p) => {
+    const ph = totalH * p.frac - 0.05;
+    slide.addShape(pres.ShapeType.rect, {
+      x: leftX + 0.25, y: py, w: cardW - 0.5, h: ph,
+      fill: { color: "2A2F55" }, line: { color: TEAL, width: 0.5 },
+    });
+    slide.addText(p.label, {
+      x: leftX + 0.25, y: py, w: cardW - 0.5, h: ph, margin: 2,
+      align: "center", valign: "middle",
+      fontFace: BODY_FONT, fontSize: 9, color: "CADCFC", rtlMode: true,
+    });
+    py += ph + 0.06;
+  });
+}
+
+// ---------- דיאגרמת "כאוס גרסאות" מול Git מסודר: שורה עליונה = שרשרת
+// 4 "תגיות קובץ" מתרחבות (v1→v2→v2_final→v2_final_REALLY) בצבע מוחלש;
+// שורה תחתונה = שרשרת 4 נקודות Commit מסודרות בטיל, עם תאריך קטן מתחת.
+// איור וקטורי מקורי.
+function addVersionChaosDiagram(slide, x, y, w, h) {
+  const rowH = Math.min(0.42, h * 0.4);
+  const gap = 0.18;
+  const n = 4;
+  const cellW = (w - gap * (n - 1)) / n;
+  const row1Y = y;
+  const row2Y = y + h - rowH;
+
+  const messyLabels = ["עבודה.docx", "עבודה_v2.docx", "v2_final.docx", "v2_final_REALLY"];
+  messyLabels.forEach((label, i) => {
+    const bx = x + w - cellW - i * (cellW + gap);
+    slide.addShape(pres.ShapeType.rect, {
+      x: bx, y: row1Y, w: cellW, h: rowH,
+      fill: { color: PH_BG }, line: { color: MUTED, width: 1, dashType: "dash" },
+    });
+    slide.addText(label, {
+      x: bx, y: row1Y, w: cellW, h: rowH, margin: 2,
+      align: "center", valign: "middle",
+      fontFace: "Courier New", fontSize: 8, color: MUTED,
+    });
+    if (i < n - 1) {
+      const leftEdge = bx - gap + 0.02;
+      slide.addShape(pres.ShapeType.line, {
+        x: leftEdge, y: row1Y + rowH / 2, w: gap - 0.04, h: 0,
+        line: { color: MUTED, width: 1, beginArrowType: "triangle" },
+      });
+    }
+  });
+
+  const commitD = Math.min(0.3, rowH * 0.8);
+  for (let i = 0; i < n; i++) {
+    const cx = x + w - cellW / 2 - i * (cellW + gap);
+    slide.addShape(pres.ShapeType.ellipse, {
+      x: cx - commitD / 2, y: row2Y + (rowH - commitD) / 2, w: commitD, h: commitD,
+      fill: { color: TEAL }, line: { type: "none" },
+    });
+    if (i < n - 1) {
+      const leftEdge = cx - (cellW + gap) + commitD / 2 + 0.03;
+      const rightEdge = cx - commitD / 2 - 0.03;
+      slide.addShape(pres.ShapeType.line, {
+        x: leftEdge, y: row2Y + rowH / 2, w: rightEdge - leftEdge, h: 0,
+        line: { color: TEAL, width: 1.25, beginArrowType: "triangle" },
+      });
+    }
+  }
+  slide.addText("Commit נקי, מסודר וניתן-לחזרה", {
+    x: x, y: row2Y + rowH + 0.02, w, h: 0.22, align: "center",
+    fontFace: BODY_FONT, italic: true, fontSize: 9, color: TEAL, rtlMode: true, margin: 0,
+  });
+}
+
+// ---------- דיאגרמת מחשב-מקומי מול ענן: כרטיסייה ימנית (RTL) = "המחשב
+// שלכם (Git)", כרטיסייה שמאלית = "GitHub (בענן)", עם חץ דו-כיווני
+// (Push/Pull) ביניהן. איור וקטורי מקורי.
+function addLocalCloudDiagram(slide, x, y, w, h) {
+  const cardW = (w - 1.1) / 2;
+  const cardH = Math.min(0.9, h * 0.8);
+  const rightX = x + w - cardW;
+  const leftX = x;
+  const cardY = y + (h - cardH) / 2;
+
+  slide.addShape(pres.ShapeType.roundRect, {
+    x: rightX, y: cardY, w: cardW, h: cardH, rectRadius: 0.06,
+    fill: { color: PH_BG }, line: { color: PH_BORDER, width: 1.25 },
+  });
+  slide.addText([
+    { text: "המחשב שלכם", options: { bold: true, fontSize: 13, color: TEXT_DARK, breakLine: true, rtlMode: true } },
+    { text: "Git — היסטוריה מקומית", options: { fontSize: 10, color: MUTED, rtlMode: true } },
+  ], {
+    x: rightX, y: cardY, w: cardW, h: cardH, margin: 6,
+    align: "center", valign: "middle",
+  });
+
+  slide.addShape(pres.ShapeType.roundRect, {
+    x: leftX, y: cardY, w: cardW, h: cardH, rectRadius: 0.06,
+    fill: { color: TEAL }, line: { color: TEAL, width: 1.25 },
+  });
+  slide.addText([
+    { text: "GitHub", options: { bold: true, fontSize: 13, color: WHITE, breakLine: true, rtlMode: true } },
+    { text: "בענן — מגובה ומשותף", options: { fontSize: 10, color: "E6FFFA", rtlMode: true } },
+  ], {
+    x: leftX, y: cardY, w: cardW, h: cardH, margin: 6,
+    align: "center", valign: "middle",
+  });
+
+  const arrowX1 = rightX - 0.1;
+  const arrowX2 = leftX + cardW + 0.1;
+  const arrowYTop = cardY + cardH * 0.35;
+  const arrowYBottom = cardY + cardH * 0.65;
+  slide.addShape(pres.ShapeType.line, {
+    x: arrowX2, y: arrowYTop, w: arrowX1 - arrowX2, h: 0,
+    line: { color: PH_BORDER, width: 1.25, beginArrowType: "triangle" },
+  });
+  slide.addShape(pres.ShapeType.line, {
+    x: arrowX2, y: arrowYBottom, w: arrowX1 - arrowX2, h: 0,
+    line: { color: PH_BORDER, width: 1.25, endArrowType: "triangle" },
+  });
+  slide.addText("Push / Pull", {
+    x: leftX + cardW + 0.05, y: cardY + cardH / 2 - 0.13, w: 1.0, h: 0.26,
+    align: "center", fontFace: BODY_FONT, italic: true, fontSize: 9, color: MUTED, margin: 0,
+  });
+}
+
+// ---------- דיאגרמת זרימת כלי AI: 3 תיבות "בקשה בשפה טבעית → כלי AI →
+// קוד בקובץ" (זהה במבנה ל-addLLMFlowDiagram משיעור 1). איור וקטורי מקורי.
+function addAIToolFlowDiagram(slide, x, y, w, h) {
+  const stages = ["בקשה בשפה טבעית", "כלי AI", "קוד בקובץ שלכם"];
+  const rowH = Math.min(0.55, h * 0.7);
+  const gap = 0.25;
+  const boxW = (w - gap * (stages.length - 1)) / stages.length;
+  const rowY = y + (h - rowH) / 2;
+
+  stages.forEach((stg, i) => {
+    const bx = x + w - boxW - i * (boxW + gap);
+    const isModel = i === 1;
+    slide.addShape(pres.ShapeType.roundRect, {
+      x: bx, y: rowY, w: boxW, h: rowH, rectRadius: 0.06,
+      fill: { color: isModel ? TEAL : PH_BG },
+      line: { color: isModel ? TEAL : PH_BORDER, width: 1.25 },
+    });
+    slide.addText(stg, {
+      x: bx, y: rowY, w: boxW, h: rowH, margin: 4,
+      align: "center", valign: "middle",
+      fontFace: BODY_FONT, bold: isModel, fontSize: 12,
+      color: isModel ? WHITE : TEXT_DARK, rtlMode: true,
+    });
+    if (i < stages.length - 1) {
+      const arrowRight = bx - gap + 0.02;
+      const arrowLeft = bx - 0.02;
+      slide.addShape(pres.ShapeType.line, {
+        x: arrowRight, y: rowY + rowH / 2, w: arrowLeft - arrowRight, h: 0,
+        line: { color: PH_BORDER, width: 1.5, beginArrowType: "triangle" },
+      });
+    }
+  });
+}
+
+// ---------- דיאגרמת Autocomplete מול Agentic: שתי שורות של אותם 4
+// שלבי-פעולה (קורא קבצים / כותב קוד / מריץ בדיקות / מתקן את עצמו), עם
+// תג "✓" מעל כל שלב שבו הסוג הזה של כלי בפועל פועל. זהה במבנה ל-
+// addAINativeDiagram משיעור 1. איור וקטורי מקורי.
+function addAgenticComparisonDiagram(slide, x, y, w, h) {
+  const stages = ["קורא קבצים", "כותב קוד", "מריץ בדיקות", "מתקן את עצמו"];
+  const labelW = 1.65;
+  const boxAreaW = w - labelW - 0.15;
+  const gap = 0.12;
+  const boxW = (boxAreaW - gap * (stages.length - 1)) / stages.length;
+  const rowH = Math.min(0.42, h * 0.32);
+  const rowGap = h - rowH * 2 > 0.3 ? h - rowH * 2 - 0.1 : 0.3;
+  const row1Y = y;
+  const row2Y = y + rowH + rowGap;
+
+  function boxX(i) {
+    return x + boxAreaW - boxW - i * (boxW + gap);
+  }
+
+  function drawRow(rowY, rowLabel, okIndexes, okColor) {
+    slide.addText(rowLabel, {
+      x: x + w - labelW, y: rowY, w: labelW, h: rowH,
+      align: "right", valign: "middle", margin: 0,
+      fontFace: TITLE_FONT, bold: true, fontSize: 11, color: TEXT_DARK, rtlMode: true,
+    });
+    stages.forEach((stg, i) => {
+      const bx = boxX(i);
+      slide.addShape(pres.ShapeType.rect, {
+        x: bx, y: rowY, w: boxW, h: rowH,
+        fill: { color: PH_BG }, line: { color: PH_BORDER, width: 1 },
+      });
+      slide.addText(stg, {
+        x: bx, y: rowY, w: boxW, h: rowH, margin: 2,
+        align: "center", valign: "middle",
+        fontFace: BODY_FONT, fontSize: 10, color: TEXT_DARK, rtlMode: true,
+      });
+      if (okIndexes.includes(i)) {
+        const badgeD = 0.24;
+        slide.addShape(pres.ShapeType.ellipse, {
+          x: bx + boxW / 2 - badgeD / 2, y: rowY - badgeD * 0.65, w: badgeD, h: badgeD,
+          fill: { color: okColor }, line: { color: WHITE, width: 1 },
+        });
+        slide.addText("✓", {
+          x: bx + boxW / 2 - badgeD / 2, y: rowY - badgeD * 0.65, w: badgeD, h: badgeD, margin: 0,
+          align: "center", valign: "middle",
+          fontFace: TITLE_FONT, bold: true, fontSize: 9, color: WHITE,
+        });
+      }
+      if (i < stages.length - 1) {
+        slide.addShape(pres.ShapeType.line, {
+          x: bx - gap, y: rowY + rowH / 2, w: gap, h: 0,
+          line: { color: PH_BORDER, width: 1 },
+        });
+      }
+    });
+  }
+
+  drawRow(row1Y, "Autocomplete", [1], MUTED);
+  drawRow(row2Y, "Agentic", [0, 1, 2, 3], TEAL);
+}
+
+// ---------- עוזר משותף: שורת מעגלים ממוספרים עם חצים (זהה ל-
+// addWorkflowLinearDiagram משיעור 1) - משמש לשקף Claude Code 5 השלבים.
+function addWorkflowLinearDiagram(slide, x, y, w, h, stepNumbers) {
+  const n = stepNumbers.length;
+  const d = Math.min(0.55, h * 0.7);
+  const rowY = y + (h - d) / 2;
+  const usableW = w - d;
+  const step = usableW / (n - 1);
+  const centerX = (i) => x + w - d / 2 - i * step;
+
+  for (let i = 0; i < n; i++) {
+    const cx = centerX(i);
+    const isLast = i === n - 1;
+    slide.addShape(pres.ShapeType.ellipse, {
+      x: cx - d / 2, y: rowY, w: d, h: d,
+      fill: { color: isLast ? TEAL : WHITE },
+      line: { color: TEAL, width: 1.5 },
+    });
+    slide.addText(String(stepNumbers[i]), {
+      x: cx - d / 2, y: rowY, w: d, h: d,
+      align: "center", valign: "middle", margin: 0,
+      fontFace: TITLE_FONT, bold: true, fontSize: 13,
+      color: isLast ? WHITE : TEXT_DARK,
+    });
+    if (i < n - 1) {
+      const leftEdge = centerX(i + 1) + d / 2 + 0.03;
+      const rightEdge = cx - d / 2 - 0.03;
+      slide.addShape(pres.ShapeType.line, {
+        x: leftEdge, y: rowY + d / 2, w: rightEdge - leftEdge, h: 0,
+        line: { color: PH_BORDER, width: 1.25, beginArrowType: "triangle" },
+      });
+    }
+  }
+}
+
+// ---------- דיאגרמת "צמיחת אופק זמן" (METR): 3 פסים אנכיים בגובה עולה
+// (לא לפי קנה-מידה מדויק - המרווח בין השניות לשעות עצום מכדי לצייר
+// ליניארית - אלא המחשה ויזואלית של "כל פעם גדול משמעותית יותר"), כל אחד
+// עם תווית מודל+זמן מתחתיו. איור וקטורי מקורי.
+function addGrowthBarsDiagram(slide, x, y, w, h) {
+  const bars = [
+    { label: "Claude 3.7 Sonnet\n~50 דקות", frac: 0.28, color: PH_BORDER },
+    { label: "מודלים מובילים\nאמצע 2026: ~12 שעות", frac: 1.0, color: TEAL },
+  ];
+  const n = bars.length;
+  const gap = 0.6;
+  const barW = 0.9;
+  const totalW = n * barW + (n - 1) * gap;
+  const startX = x + (w - totalW) / 2;
+  const maxBarH = h - 0.5;
+
+  bars.forEach((b, i) => {
+    const bx = startX + i * (barW + gap);
+    const barH = Math.max(0.3, maxBarH * b.frac);
+    const barY = y + (maxBarH - barH);
+    slide.addShape(pres.ShapeType.rect, {
+      x: bx, y: barY, w: barW, h: barH,
+      fill: { color: b.color }, line: { type: "none" },
+    });
+    slide.addText(b.label, {
+      x: bx - 0.35, y: y + maxBarH + 0.05, w: barW + 0.7, h: 0.45,
+      align: "center", valign: "top", margin: 0,
+      fontFace: BODY_FONT, fontSize: 9, color: TEXT_DARK, rtlMode: true,
+    });
+  });
+
+  // חץ עולה קטן משמאל לימין (RTL: מהמוקדם/ימין למאוחר/שמאל) שממחיש מגמה
+  slide.addShape(pres.ShapeType.line, {
+    x: startX + totalW + 0.15, y: y + maxBarH * 0.15, w: 0, h: maxBarH * 0.7,
+    line: { color: MUTED, width: 1, dashType: "dash", beginArrowType: "triangle" },
+    rotate: 0,
+  });
+}
+
 function addFooter(slide) {
   SLIDE_NUM += 1;
   slide.addText(`Vibe Coding · ${LESSON_LABEL} · שקף ${SLIDE_NUM}`, {
@@ -139,10 +520,10 @@ function addFooter(slide) {
   });
 }
 
-// שקף תוכן רגיל: כותרת → שאלה → בולטים → מה עושים בפועל → (מקור) → פוטר
-// שלב זה בכוונה בלי איורים/דיאגרמות (יתווספו בסבב נפרד לפי בקשת המשתמש) -
-// הבולטים מקבלים את כל הגובה הפנוי במקום.
-function contentSlide({ title, question, bullets, bestPractice, source }) {
+// שקף תוכן רגיל: כותרת → שאלה → בולטים → (איור) → מה עושים בפועל → (מקור) → פוטר
+// diagram: פונקציה (slide, x, y, w, h) => void שמציירת איור וקטורי מקורי;
+// diagramCaption: הטקסט שמופיע תחתיו כ"איור: ..." (לא "מקור:", כי זה לא ציטוט חיצוני)
+function contentSlide({ title, question, bullets, bestPractice, source, diagram, diagramCaption }) {
   const s = pres.addSlide();
   s.background = { color: WHITE };
   addTitle(s, title);
@@ -150,20 +531,64 @@ function contentSlide({ title, question, bullets, bestPractice, source }) {
 
   const bulletsY = question ? 1.65 : 1.35;
   const maxBulletsH = bestPractice ? 4.3 : 5.2;
+
+  // הערה קריטית: תיבת הבולטים ב-pptxgenjs ממורכזת אנכית (anchor="ctr")
+  // בברירת המחדל. אם מקצים לה פחות גובה משהתוכן בפועל צריך (כדי לפנות
+  // מקום לאיור), הטקסט לא נחתך - הוא "גולש" בשני הכיוונים סביב מרכז
+  // התיבה, ולפעמים בולע ממש לתוך השאלה שמעליה! לכן חובה קודם להעריך כמה
+  // גובה הבולטים דורשים בפועל (לפי אורך תו), ולא לצמצם את bulletsH
+  // מתחת לזה - גם אם זה אומר לצמצם את האיור, או לוותר עליו, במקום.
+  const bulletCharsPerLine = 100;
+  const bulletLineH = 0.335; // גובה שורה בפועל בגופן 19, כולל paraSpaceAfter יחסי
+  let neededBulletsH = 0;
+  bullets.forEach((b) => {
+    neededBulletsH += estimateLines(b, bulletCharsPerLine) * bulletLineH + 0.1;
+  });
+  neededBulletsH = Math.min(neededBulletsH, maxBulletsH);
+
   // מגבלת הגובה הפנוי לפני הפוטר (7.1): מעריכים מראש כמה מקום bestPractice
-  // ו-source ידרשו בפועל (bestPractice עלול לעטוף לשתי שורות בתוכן צפוף
-  // כמו מקרי-בוחן), ומצמצמים את bulletsH בהתאם - כדי שלא יתנגשו עם הפוטר.
-  let reservedBottom = 0.15;
+  // ו-source ידרשו בפועל, ומחשבים כמה נשאר לאיור (אם יש) - ולא להיפך.
+  let reservedFixedBottom = 0.15;
   let bpLines = 1;
   if (bestPractice) {
     bpLines = estimateLines("✔ מה עושים בפועל: " + bestPractice, 108);
-    reservedBottom += 0.1 + bpLines * 0.34 + 0.12;
+    reservedFixedBottom += 0.1 + bpLines * 0.34 + 0.12;
   }
-  if (source) reservedBottom += 0.32;
-  const bulletsH = Math.min(maxBulletsH, 7.1 - bulletsY - reservedBottom);
+  if (source) reservedFixedBottom += 0.32;
+
+  // ללא איור: כמו קודם, ממלאים את כל הגובה הפנוי (עד maxBulletsH).
+  // עם איור: הבולטים מקבלים רק את מה שהם צריכים בפועל (neededBulletsH),
+  // לא יותר - כדי שיישאר מקום אמיתי לאיור, בלי לגרום לגלישה.
+  const bulletsH = diagram
+    ? neededBulletsH
+    : Math.min(maxBulletsH, 7.1 - bulletsY - reservedFixedBottom);
   addBullets(s, bullets, bulletsY, bulletsH);
 
+  // מה שנשאר עבור האיור: הגובה האידיאלי (1.65) אם יש מקום, אחרת מצטמצם
+  // עד למינימום סביר (1.0) - ואם גם זה לא מספיק, מוותרים על האיור בשקף
+  // הזה במקום לגרום לחפיפה (עדיף שקף בלי איור מאשר שקף שבור).
+  const availableForDiagram = 7.1 - (bulletsY + bulletsH + 0.15) - reservedFixedBottom;
+  const diagramCaptionH = diagram && diagramCaption ? 0.28 : 0;
+  let diagramH = 0;
+  let showDiagram = false;
+  if (diagram) {
+    if (availableForDiagram >= 1.0 + diagramCaptionH + 0.1) {
+      diagramH = Math.min(1.65, availableForDiagram - diagramCaptionH - 0.1);
+      showDiagram = true;
+    } else {
+      console.warn(`[דילוג על איור - אין מקום] שקף: ${title}`);
+    }
+  }
+
   let nextY = bulletsY + bulletsH + 0.15;
+  if (showDiagram) {
+    diagram(s, 0.6, nextY, 12.13, diagramH);
+    nextY += diagramH + 0.1;
+    if (diagramCaption) {
+      addDiagramCaption(s, diagramCaption, nextY);
+      nextY += 0.28;
+    }
+  }
   if (bestPractice) {
     nextY = addBestPractice(s, bestPractice, nextY) + 0.12;
   }
@@ -280,6 +705,8 @@ contentSlide({
     "רוב כלי ה-AI האג'נטיים (כולל Claude Code) מתחברים ל-VS Code כתוסף (Extension), או פועלים לצידו מתוך הטרמינל המובנה שלו",
   ],
   bestPractice: "כל התרגול היום (ובכל שיעור מכאן והלאה) יתבצע בתוך VS Code — זה \"השולחן\" שעליו כל שאר הכלים יושבים.",
+  diagram: addIDEComparisonDiagram,
+  diagramCaption: "Notepad — טקסט פשוט בלי עזרה, מול VS Code — עורך צבעוני + טרמינל מובנה + איתור באגים, הכל בחלון אחד.",
 });
 
 // =====================================================================
@@ -293,6 +720,8 @@ contentSlide({
     "**Version Control** (ניהול גרסאות) = מערכת ששומרת \"תמונת מצב\" (Snapshot — עותק מדויק של כל הפרויקט ברגע נתון) בכל נקודת זמן שתבחרו, עם אפשרות לחזור אליה, להשוות בין גרסאות, ולעבוד יחד עם אחרים בלי לדרוך אחד על השני",
   ],
   bestPractice: "Version Control הוא לא \"נחמד שיהיה\" — הוא הבסיס שעליו כל שאר השיעור בנוי, כי בלעדיו אי אפשר לעבוד בבטחון עם AI (בשקף הבא נראה למה).",
+  diagram: addVersionChaosDiagram,
+  diagramCaption: "שרשרת שמות קבצים מבולבלת (למעלה, מוחלש) מול שרשרת Commit-ים מסודרת עם מסלול חזרה (למטה, בטיל).",
 });
 
 // =====================================================================
@@ -321,9 +750,11 @@ contentSlide({
     "Git = הכלי שרץ אצלכם במחשב, שומר היסטוריה מקומית בלבד",
     "**GitHub** = שירות אחסון בענן (של Microsoft) ששומר עותק מגובה של ה-Repository באינטרנט, מאפשר לשתף אותו עם אחרים, ולשתף פעולה על אותו קוד (נרחיב בשיעור 10)",
     "אנלוגיה: Git הוא כמו קובץ Word בודד במחשב שלכם; GitHub הוא כמו Google Drive — המקום שבו הוא מגובה ומשותף",
-    "**פעילות:** מי מכם כבר השתמש ב-Git בעבר, בכל הקשר שהוא — גם רק כדי לשכפל Repository של מישהו אחר? איך שיתפתם קוד עם מישהו לפני שהכרתם GitHub (וואטסאפ? מייל? Google Drive)?",
+    "**פעילות:** מי כבר השתמש ב-Git, ולו רק כדי לשכפל Repository של מישהו אחר? איך שיתפתם קוד לפני שהכרתם GitHub (וואטסאפ? מייל?)",
   ],
-  bestPractice: "בתרגול היום תיצרו Repository ראשון משלכם ב-GitHub — זה הבית הקבוע של הפרויקט שילווה אתכם לאורך הסמסטר.",
+  bestPractice: "בתרגול היום תיצרו Repository משלכם ב-GitHub — הבית הקבוע של הפרויקט לאורך הסמסטר.",
+  diagram: addLocalCloudDiagram,
+  diagramCaption: "Git רץ על המחשב שלכם (היסטוריה מקומית); GitHub הוא העותק בענן, מגובה ומשותף — Push מעלה, Pull מוריד.",
 });
 
 // =====================================================================
@@ -353,6 +784,8 @@ contentSlide({
     "יש כמה \"רמות\" של כלים כאלה, מהבסיסית ביותר ועד המתקדמת — וזה בדיוק ההבדל בין Autocomplete ל-Agentic שנפרט בשקף הבא",
   ],
   bestPractice: "בשיעור הקודם ראיתם הדגמה של זה בפעולה — עכשיו נגדיר את זה במדויק.",
+  diagram: addAIToolFlowDiagram,
+  diagramCaption: "בקשה בשפה טבעית → כלי AI → קוד שנכתב בפועל בקובץ שלכם.",
 });
 
 // =====================================================================
@@ -367,6 +800,8 @@ contentSlide({
     "**למסלול AI:** זה דומה למעבר מ-Feature Engineering (בחירת מאפיינים) ידני למודלים מבוססי Deep Learning — גם שם המעבר הוא מ\"אני מגדיר כל שלב בעצמי\" ל\"אני מגדיר מטרה, והמערכת מבצעת יותר מהדרך אליה\" — אבל בשני המקרים אתם עדיין קובעים את המטרה ובודקים את התוצאה, בדיוק כמו ה-Evaluation שלכם ב-ML",
   ],
   bestPractice: "הקורס הזה עוסק בסוג השני (Agentic) — \"עוזר הקלדה\" זה לא המטרה כאן.",
+  diagram: addAgenticComparisonDiagram,
+  diagramCaption: "אותם 4 שלבי-פעולה: Autocomplete נוגע רק בכתיבת קוד; Agentic פועל בכל השלבים - קורא, כותב, בודק, ומתקן את עצמו.",
 });
 
 // =====================================================================
@@ -438,6 +873,8 @@ contentSlide({
     "**הנתון:** אופק הזמן הכפיל את עצמו בערך כל 4 חודשים בשנים האחרונות; במודלים המובילים באמצע 2026 האופק הגיע לכ-12 שעות (לשם השוואה: Claude 3.7 Sonnet, מ-2025, עמד על כ-50 דקות בלבד)",
   ],
   bestPractice: "שני סוגי הבנצ'מארק משלימים זה את זה — אחד אומר \"האם זה נכון\", השני אומר \"כמה הוא יכול להתמיד לבד\". כשמעריכים כלי AI (בקורס הזה או בעתיד המקצועי שלכם), שווה לשאול את שתי השאלות, לא רק אחת.",
+  diagram: addGrowthBarsDiagram,
+  diagramCaption: "המחשה (לא לפי קנה-מידה): אופק הזמן גדל משמעותית בין דורות מודלים - מדקות בודדות לשעות ארוכות.",
   source: "metr.org/time-horizons",
 });
 
@@ -455,6 +892,8 @@ contentSlide({
     "**5. ממשיכים לצעד הבא**, או חוזרים לשלב 2 אם צריך תיקון",
   ],
   bestPractice: "זה בדיוק החיבור לשלבים 4-6 מה-Workflow שלמדנו בשיעור 1 (תכנון עם AI → מימוש עם AI → Code Review) — היום אתם עושים את זה בפועל, לא רק רואים הדגמה.",
+  diagram: (s, x, y, w, h) => addWorkflowLinearDiagram(s, x, y, w, h, [1, 2, 3, 4, 5]),
+  diagramCaption: "5 השלבים בזרימה מ-1 עד 5 (כזכור מהבולט למעלה - אם שלב 4 דורש תיקון, חוזרים לשלב 2).",
 });
 
 // =====================================================================
