@@ -22,4 +22,9 @@
 - [DORA: ROI of AI-assisted Software Development report](https://dora.dev/ai/)
 - אימוץ AI בלי תהליך מסודר מוביל ל-30-41% יותר חוב טכני; Pull Requests שנכתבו ב-AI נושאים פי 1.7 יותר בעיות מ-PR אנושי.
 
+### כלים חינמיים לתרגול (נבדק יולי 2026)
+- [Plans for GitHub Copilot — GitHub Docs](https://docs.github.com/en/copilot/get-started/plans) — Copilot Free כולל Agent Mode (לא רק Autocomplete), אך רק עם בחירת מודל אוטומטית (מודלים חלשים יותר כמו Claude Haiku 3.5 / GPT-4o mini), ומכסה מוגבלת (בסדר גודל של 50 בקשות Chat/Agent בחודש) — מספיק ליצירת קובץ בודד כמו בתרגול.
+- [Cursor Pricing — nxcode.io, יולי 2026](https://www.nxcode.io/resources/news/cursor-ai-pricing-plans-guide-2026) — מסלול Hobby (חינמי) כולל "limited Agent requests" בפועל, ללא כרטיס אשראי.
+- GitHub Student Developer Pack: הרשמה חדשה להטבת Copilot Student הושהתה באפריל 2026 עקב עומס על תשתית agentic — סטודנטים שאומתו קודם ממשיכים לקבל את ההטבה, וחברי Pack חדשים מקבלים כרגע Copilot Free הרגיל בלבד. שאר הטבות ה-Pack (JetBrains, Azure for Students, DigitalOcean וכו') פעילות כרגיל.
+
 **הערת עדכניות:** נתוני אימוץ ובנצ'מארק משתנים חודשית בתחום הזה. יש לוודא סטטוס עדכני לפני כל הוראה בפועל.
