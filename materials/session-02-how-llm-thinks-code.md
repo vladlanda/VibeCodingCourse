@@ -881,88 +881,246 @@ ZeroDivisionError: division by zero
 **מחברת להגשה:** [`exercises/HM_02.ipynb`](../exercises/HM_02.ipynb) — כל התרגול, כולל ההסברים והנוסחאות הדרושים למימוש, שלדי הפונקציות ותאי הבדיקה. מעלים ל-Colab (File → Upload notebook), עובדים בה ומגישים אותה.
 **כלל חשוב:** את הפונקציות המסומנות `# TODO` מממשים **בעצמכם, בלי כלי AI** — המטרה היא להבין את המנגנון, לא לקבל קוד. (מותר להשתמש ב-AI בחלק ה', שבו הוא נושא הניסוי.) כל פונקציה מגיעה עם תא בדיקה: כשהמימוש נכון, יודפס `✓`.
 
-### חלק א' — טוקניזציה: לממש BPE בעצמכם (12 דק')
+### חלק א' — טוקניזציה: לממש BPE בעצמכם (14 דק')
 
-בהרצאה למדנו שאוצר המילים נבנה כך: מתחילים מתווים בודדים, ושוב ושוב **מאחדים את הצמד הסמוך השכיח ביותר** לטוקן חדש. כאן תממשו את שני הצעדים של האלגוריתם.
+#### הרקע — אותה דוגמה מההרצאה
 
-**ייצוג:** הקורפוס הוא רשימה של זוגות `(tokens, freq)` — מילה מפורקת לרשימת טוקנים, ומספר הפעמים שהיא מופיעה. למשל `(["t", "a", "x"], 3)`.
+מודל שפה לא קורא אותיות או מילים — הוא קורא **טוקנים**. אוצר הטוקנים $\mathcal{V}$ נבנה לפני אימון המודל, באלגוריתם **BPE**. בחלק הזה תבנו את אותו אוצר מילים שבנינו בהרצאה, על אותו קורפוס:
 
-1. **ממשו:**
+`hug hug hug hugs bug bugs bug bugs hug hug hugs hugs`
+
+**האלגוריתם, כמו בהרצאה:**
+
+1. סופרים כמה פעמים כל מילה מופיעה בקורפוס — השכיחות $f(w)$.
+2. מפרקים כל מילה לאותיות. בהתחלה $\mathcal{V}$ הוא קבוצת האותיות.
+3. **צעד:** סופרים כל זוג טוקנים צמודים, כשכל הופעה בתוך מילה $w$ נספרת $f(w)$ פעמים: $\text{count}(a, b) = \sum_{w} f(w) \cdot c_w(a, b)$, כאשר $c_w(a, b)$ הוא מספר הפעמים שהזוג מופיע צמוד בתוך $w$.
+4. ממזגים את הזוג השכיח ביותר לטוקן חדש, מוסיפים אותו ל-$\mathcal{V}$, ומחליפים אותו בכל המילים.
+5. חוזרים לשלב 3.
+
+**התוצאה שצריכה לצאת לכם** (הטבלה מההרצאה):
+
+| צעד | הזוג השכיח ביותר (ספירה) | טוקן חדש |
+|---|---|---|
+| 1 | `u · g` (12) | `ug` |
+| 2 | `h · ug` (8) | `hug` |
+| 3 | `b · ug` (4) | `bug` |
+| 4 | `hug · s` (3) | `hugs` |
+
+תממשו ארבע פונקציות קטנות — אחת לכל שלב — ותא נתון יחבר אותן לאלגוריתם המלא.
+
+#### שלב 1 — השכיחויות $f(w)$
+
+ממשו פונקציה שמקבלת את הקורפוס כמחרוזת ומחזירה מילון: לכל מילה — כמה פעמים היא מופיעה.
+
+**כלים:** `text.split()` מפרק מחרוזת לרשימת מילים לפי רווחים. `Counter(list)` סופר כמה פעמים מופיע כל איבר ברשימה (ו-`dict(...)` הופך את התוצאה למילון רגיל).
 
 ```python
-from collections import Counter
+def word_frequencies(text):
+    """Returns a dict word -> how many times it appears in text (words are separated by spaces).
+    e.g. word_frequencies("a b a") -> {"a": 2, "b": 1}
+    """
+    # TODO
+    raise NotImplementedError
+```
 
+```python
+# בדיקה — שלב 1
+text = "hug hug hug hugs bug bugs bug bugs hug hug hugs hugs"
+
+def check_a1():
+    assert word_frequencies("a b a") == {"a": 2, "b": 1}, "word_frequencies: הדוגמה מה-docstring"
+    assert word_frequencies(text) == {"hug": 5, "hugs": 3, "bug": 2, "bugs": 2}, \
+        "word_frequencies: השכיחויות של הקורפוס מההרצאה צריכות להיות 5, 3, 2, 2"
+    return True
+
+check_a1() and print("✓ שלב 1:", word_frequencies(text))
+```
+
+#### הייצוג — כל מילה כרצף טוקנים (נתון)
+
+כדי למזג טוקנים, כל מילה צריכה להיות **רצף של טוקנים**, לא מחרוזת. נייצג את הקורפוס כמילון: **המפתח** הוא המילה כ-tuple של טוקנים, **הערך** הוא השכיחות שלה. בהתחלה כל טוקן הוא אות אחת. הריצו את התא וראו את המבנה:
+
+```python
+def to_letters(freqs):
+    """Turns {"hugs": 3} into {("h", "u", "g", "s"): 3} — every word becomes a tuple of letters."""
+    return {tuple(word): f for word, f in freqs.items()}
+
+corpus = to_letters(word_frequencies(text))
+for tokens, f in corpus.items():
+    print(f"{f} × {tokens}")
+```
+
+#### שלב 2 — ספירת זוגות $\text{count}(a, b)$
+
+ממשו פונקציה שמקבלת את הקורפוס (בייצוג שלמעלה) ומחזירה, לכל זוג טוקנים צמודים $(a, b)$, את $\text{count}(a, b)$.
+
+**איך:** עוברים על כל מילה (`tokens`) והשכיחות שלה (`f`). בתוך המילה, עוברים על כל המקומות $k$ מ-0 עד `len(tokens) - 2`, ולזוג `(tokens[k], tokens[k + 1])` מוסיפים `f`.
+
+**לדוגמה:** במילה `('h', 'u', 'g', 's')` עם שכיחות 3 יש שלושה זוגות צמודים: `('h','u')`, `('u','g')`, `('g','s')` — כל אחד מקבל $+3$. אחרי שעוברים על כל ארבע המילים, `('u','g')` צריך להגיע ל-$5 + 3 + 2 + 2 = 12$.
+
+**כלי:** `Counter()` הוא מילון שערך ברירת המחדל שלו 0, כך ש-`counts[key] += f` עובד גם למפתח חדש.
+
+```python
 def count_pairs(corpus):
-    """Counts every pair of ADJACENT tokens in the corpus, weighted by word frequency.
-    corpus: list of (tokens, freq), e.g. [(["a", "b", "a"], 2)]
-    returns: Counter mapping (left, right) -> total count, e.g. {("a","b"): 2, ("b","a"): 2}
+    """corpus: dict tokens_tuple -> frequency, e.g. {("h", "u", "g"): 5, ...}
+    returns: Counter mapping each adjacent pair (a, b) -> count(a, b)
     """
     # TODO
     raise NotImplementedError
+```
 
+```python
+# בדיקה — שלב 2
+def check_a2():
+    assert count_pairs({("a", "b"): 1}) == Counter({("a", "b"): 1}), "count_pairs: מילה אחת, זוג אחד"
+    assert count_pairs({("a", "b", "a", "b"): 2}) == Counter({("a", "b"): 4, ("b", "a"): 2}), \
+        "count_pairs: זוג שמופיע פעמיים באותה מילה נספר פעמיים (כפול השכיחות)"
+    assert count_pairs(to_letters(word_frequencies(text))) == \
+        Counter({("u", "g"): 12, ("h", "u"): 8, ("g", "s"): 5, ("b", "u"): 4}), \
+        "count_pairs: הספירות בצעד 1 של ההרצאה צריכות להיות 12, 8, 5, 4"
+    return True
+
+check_a2() and print("✓ שלב 2:", dict(count_pairs(corpus)))
+```
+
+#### שלב 3 — מיזוג זוג בתוך מילה אחת
+
+ממשו פונקציה שמקבלת מילה (tuple של טוקנים) וזוג $(a, b)$, ומחזירה tuple חדש שבו כל הופעה של $a$ ומיד אחריו $b$ הוחלפה בטוקן אחד, $a + b$ (שרשור של שתי המחרוזות).
+
+**איך:** סורקים משמאל לימין עם אינדקס `k`. אם `tokens[k]` ו-`tokens[k + 1]` הם הזוג — מוסיפים לתוצאה את `tokens[k] + tokens[k + 1]` ו**מדלגים שניים** (`k += 2`). אחרת — מוסיפים את `tokens[k]` ומתקדמים אחד.
+
+**לדוגמה:** `merge_pair(('h','u','g','s'), ('u','g'))` ← `('h', 'ug', 's')`. ולמה מדלגים שניים? ב-`('a','a','a')` עם הזוג `('a','a')`: ממזגים את שתי הראשונות ל-`'aa'`, והאות השלישית נשארת לבד — `('aa', 'a')`. האות השנייה כבר "נוצלה" ולא משתתפת במיזוג נוסף.
+
+```python
 def merge_pair(tokens, pair):
-    """Replaces every occurrence of the adjacent pair (left, right) in tokens with left+right.
-    Scans left to right; a token that was just merged is not reused.
-    e.g. merge_pair(["a","b","a","b"], ("a","b")) -> ["ab", "ab"]
-         merge_pair(["a","a","a"],     ("a","a")) -> ["aa", "a"]
+    """tokens: tuple of tokens, e.g. ("h", "u", "g", "s"); pair: (a, b), e.g. ("u", "g")
+    returns: a new tuple where every adjacent a, b became the single token a + b,
+             e.g. ("h", "ug", "s")
     """
     # TODO
     raise NotImplementedError
 ```
 
-2. **בדיקה:**
-
 ```python
-assert count_pairs([(["a", "b", "a", "b"], 2)]) == Counter({("a", "b"): 4, ("b", "a"): 2})
-assert merge_pair(["a", "b", "a", "b"], ("a", "b")) == ["ab", "ab"]
-assert merge_pair(["a", "a", "a"], ("a", "a")) == ["aa", "a"]
-assert merge_pair(["x", "y"], ("a", "b")) == ["x", "y"]
-hug_corpus = [(list("hug"), 5), (list("hugs"), 3), (list("bug"), 2), (list("bugs"), 2)]
-assert count_pairs(hug_corpus) == Counter({("u", "g"): 12, ("h", "u"): 8, ("g", "s"): 5, ("b", "u"): 4})
-print("✓ חלק א' — המימוש עובר את הבדיקות")
+# בדיקה — שלב 3
+def check_a3():
+    assert merge_pair(("h", "u", "g", "s"), ("u", "g")) == ("h", "ug", "s"), "merge_pair: הדוגמה מה-docstring"
+    assert merge_pair(("h", "ug"), ("h", "ug")) == ("hug",), "merge_pair: מיזוג שהופך את כל המילה לטוקן אחד"
+    assert merge_pair(("a", "a", "a"), ("a", "a")) == ("aa", "a"), "merge_pair: אחרי מיזוג מדלגים על שני הטוקנים"
+    assert merge_pair(("b", "u", "s", "h"), ("u", "g")) == ("b", "u", "s", "h"), "merge_pair: זוג שלא קיים — לא משנים כלום"
+    return True
+
+check_a3() and print("✓ שלב 3")
 ```
 
-3. **אימון.** קורפוס צעצוע של שמות משתנים, עם השכיחויות שלהם. **תחזית:** אילו מהמילים יהפכו לטוקן אחד אחרי 10 מיזוגים, ואילו יישארו מפורקות?
+#### שלב 4 — מיזוג בכל הקורפוס
+
+ממשו פונקציה שמפעילה את `merge_pair` על **כל** מילה בקורפוס, ומחזירה קורפוס חדש עם אותן שכיחויות.
+
+**לדוגמה** (צעד 1 בהרצאה): אחרי מיזוג `('u','g')`, הקורפוס `{('h','u','g'): 5, ('h','u','g','s'): 3, ...}` הופך ל-`{('h','ug'): 5, ('h','ug','s'): 3, ('b','ug'): 2, ('b','ug','s'): 2}`.
 
 ```python
-words = {"total": 6, "total_price": 4, "total_tax": 3, "price": 5, "tax": 3, "vat": 1, "with": 1}
-corpus = [(list(w), f) for w, f in words.items()]
-merges = []
-for step in range(10):
-    pairs = count_pairs(corpus)
-    best = max(pairs, key=lambda p: (pairs[p], p))     # השכיח ביותר (שובר שוויון באופן קבוע)
-    merges.append(best)
-    corpus = [(merge_pair(t, best), f) for t, f in corpus]
-    print(f"מיזוג {step + 1}: {best[0]!r} + {best[1]!r}  (שכיחות {pairs[best]})")
+def merge_corpus(corpus, pair):
+    """Applies merge_pair to every word in corpus; frequencies stay the same.
+    returns: a new dict tokens_tuple -> frequency
+    """
+    # TODO
+    raise NotImplementedError
+```
+
+```python
+# בדיקה — שלב 4
+def check_a4():
+    after = merge_corpus(to_letters(word_frequencies(text)), ("u", "g"))
+    assert after == {("h", "ug"): 5, ("h", "ug", "s"): 3, ("b", "ug"): 2, ("b", "ug", "s"): 2}, \
+        "merge_corpus: הקורפוס אחרי צעד 1 של ההרצאה"
+    return True
+
+check_a4() and print("✓ שלב 4")
+```
+
+#### האלגוריתם המלא (נתון) — השוו להרצאה
+
+התא הבא משתמש בארבע הפונקציות שלכם כדי לבנות את אוצר המילים, ומדפיס כל צעד. **הפלט צריך להיות זהה לטבלה מההרצאה.** (אם יש תיקו בספירה, `max` עם `key=(ספירה, זוג)` בוחר תמיד את אותו זוג, כך שהתוצאה קבועה.)
+
+אחר כך, `tokenize` מפרקת מילה חדשה בעזרת המיזוגים שנלמדו, **לפי הסדר שבו נלמדו** — זה הטוקנייזר $\tau$ מההרצאה.
+
+**תחזית (לפני ההרצה):** לכמה טוקנים יתפרקו `hugs`, `bugs`, `bush` ו-`ממוצע`?
+
+```python
+def train_bpe(text, num_merges):
+    """Builds a BPE vocabulary from text and returns the list of merges, in order."""
+    corpus = to_letters(word_frequencies(text))
+    vocab = sorted({ch for tokens in corpus for ch in tokens})
+    print("אוצר מילים התחלתי:", vocab)
+    merges = []
+    for step in range(1, num_merges + 1):
+        pairs = count_pairs(corpus)
+        if not pairs:                                   # every word is already one token
+            break
+        best = max(pairs, key=lambda p: (pairs[p], p))  # the most frequent pair
+        merges.append(best)
+        corpus = merge_corpus(corpus, best)
+        vocab.append(best[0] + best[1])
+        print(f"צעד {step}: הזוג השכיח ביותר {best[0]} · {best[1]} ({pairs[best]}) → טוקן חדש '{best[0] + best[1]}'")
+    print("אוצר המילים הסופי:", vocab)
+    return merges
+
 
 def tokenize(word, merges):
-    tokens = list(word)
-    for pair in merges:                 # מפעילים את המיזוגים לפי הסדר שבו נלמדו
+    """The tokenizer tau: starts from letters and applies the learned merges in order."""
+    tokens = tuple(word)
+    for pair in merges:
         tokens = merge_pair(tokens, pair)
     return tokens
 
-for w in ["total_price", "price_with_vat", "total_vat", "ממוצע"]:
-    print(f"{w:16} → {tokenize(w, merges)}")
+
+merges = train_bpe(text, 4)
+print()
+for w in ["hug", "hugs", "bug", "bugs", "bush", "ממוצע"]:
+    t = tokenize(w, merges)
+    print(f"τ({w}) = {t}   n = {len(t)}")
 ```
 
-4. **השוואה למפענח אמיתי.** הריצו:
+#### ניסוי — מה קורה אם משנים את השכיחויות?
+
+**תחזית:** אם נוסיף לקורפוס עוד שתי הופעות של `bugs` (כלומר $f(\texttt{bugs}) = 4$), מה ישתנה בטבלת המיזוגים? לכמה טוקנים יתפרקו עכשיו `hugs` ו-`bugs`?
+
+בתא הבא, הגדירו `text2` עם שתי ההופעות הנוספות, הריצו `train_bpe(text2, 4)` ופרקו את `hugs` ואת `bugs`.
+
+```python
+# TODO: הניסוי
+```
+
+#### השוואה למפענח אמיתי
+
+התא הבא משתמש במפענח `o200k_base` — המפענח של מודלים של OpenAI מ-2024. הוא נבנה באותו עיקרון בדיוק, רק על כמות עצומה של טקסט ועם כמאתיים אלף מיזוגים. הפלט מציג כל טוקן מופרד בקו `|`.
 
 ```python
 !pip install -q tiktoken
 import tiktoken
+
 enc = tiktoken.get_encoding("o200k_base")
-for t in ["calculate_total_price_with_vat", "calcTotPrcVat",
+for t in ["calculate_total_price_with_vat",
           "Write a function that computes the average of a list of numbers",
           "כתוב פונקציה שמחשבת ממוצע של רשימת מספרים"]:
     ids = enc.encode(t)
     print(f"{len(ids):3} טוקנים | {' | '.join(enc.decode([i]) for i in ids)}")
 ```
 
-5. **שאלות ניתוח:**
-   - (א) במפענח הצעצוע שלכם, למה `total` ו-`price` הפכו לטוקן אחד, ו-`vat` נשאר `v | a | t`? מצאו במפענח האמיתי (סעיף 4) את אותה תופעה בדיוק.
-   - (ב) למה `ממוצע` נשאר מפורק לגמרי במפענח הצעצוע? מה זה מסביר על עברית במפענחים אמיתיים?
-   - (ג) **קיבולת:** לפי סעיף 4, חשבו טוקנים-למילה בעברית ובאנגלית. בחלון של 128,000 טוקנים, שמתוכם 8,000 שמורים לתשובה — כמה מילים בעברית נכנסות, וכמה באנגלית?
-   - (ד) `calcTotPrcVat` קצר פי 2.3 בתווים. כמה טוקנים הוא חוסך? האם שווה לקצר שמות משתנים "כדי לחסוך טוקנים"?
+#### שאלות ניתוח — חלק א'
+
+**(א)** למה `hugs` הפכה לטוקן אחד ו-`bugs` נשארה שני טוקנים, למרות שהן בנויות באותה צורה? הסבירו בעזרת הספירות בצעד 4.
+
+**(ב)** מה יצא בניסוי עם $f(\texttt{bugs}) = 4$? האם התחזית שלכם הייתה נכונה? מה זה אומר על הקשר בין שכיחות לבין מספר הטוקנים?
+
+**(ג) קיבולת.** לפי הפלט של המפענח האמיתי, חשבו את יחס הטוקנים-למילה $\rho = n / n_\text{words}$ בעברית ובאנגלית (ספרו את המילים בכל משפט). בחלון הקשר של $L = 128{,}000$ טוקנים, שמתוכם $8{,}000$ שמורים לתשובה — כמה מילים בעברית נכנסות, וכמה באנגלית? (אפשר לחשב בתא קוד.)
+
+**(ד)** במפענח האמיתי, `calculate_total_price_with_vat` מתפרק ל-`calculate | _total | _price | _with | _v | at`. איזה חלק בו מתנהג כמו `bugs` אצלכם, ולמה? ולמה `ממוצע` לא התמזגה בכלל במפענח שלכם?
+
+```python
+# תא חישוב לשאלה (ג)
+```
 
 ### חלק ב' — Embeddings: לממש דמיון קוסינוס (5 דק')
 
@@ -1061,7 +1219,7 @@ for T in [0.2, 0.7, 1.0]:
    - (ג) ב-$T = 1$, טוקן קל בוחר את המוביל ב-99.7% מהמקרים. למה התשובה כולה כמעט אף פעם לא זהה לתשובה המובילה? חשבו בנפרד את התרומה של 190 הטוקנים הקלים ושל 10 נקודות ההחלטה.
    - (ד) הרצתם פרומפט פעמיים וקיבלתם קוד שונה — האם אחת התשובות שגויה? ואם קיבלתם קוד **זהה** פעמיים — מה זה מרמז על ההתפלגות של המודל בשאלה הזו?
 
-### חלק ד' — הזיות: לממש בדיקת קיום, ולגלות מה היא מפספסת (9 דק')
+### חלק ד' — הזיות: לממש בדיקת קיום, ולגלות מה היא מפספסת (8 דק')
 
 לפניכם קוד שמכיל **ארבע** הזיות:
 
@@ -1120,7 +1278,7 @@ for line in ['r = requests.fetch(URL)',
    - (ב) `retries` זרק `TypeError` רק כי `requests` מעבירה את `**kwargs` הלאה לפונקציה שבודקת אותם. כתבו פונקציה קצרה (שלכם) שמקבלת `**kwargs` **ומתעלמת** מפרמטרים לא מוכרים, והראו שקריאה עם `retries=3` "עובדת". לאיזה סוג הזיה הפכה ההזיה, ולמה היא מסוכנת יותר?
    - (ג) השוו לתחזית מסעיף 1. מה היה שגוי, ומה למדתם?
 
-### חלק ה' — ניסוי: המלצות חבילות של מודל אמיתי (7 דק')
+### חלק ה' — ניסוי: המלצות חבילות של מודל אמיתי (6 דק')
 
 1. **ממשו** מדד עקביות בין שתי רשימות המלצות:
 
@@ -1182,7 +1340,7 @@ for name in ["pandas", "openpyxl", "excel-fast-writer-pro"]:   # בדיקת שפ
 חמישה משפטים, אחד לכל חלק: **מה מימשתם ומדדתם ← איזו חוליה במנגנון זה מראה ← מה עושים בעקבות זה בעבודה עם AI.**
 
 ### קריטריוני הצלחה
-- ✓ שבע הפונקציות (`count_pairs`, `merge_pair`, `cosine`, `softmax`, `p_greedy_path`, `audit`, `jaccard`) מומשו **בלי AI**, וכל תאי הבדיקה מדפיסים `✓` — כולל בדיקת היציבות הנומרית של `softmax`.
+- ✓ תשע הפונקציות (`word_frequencies`, `count_pairs`, `merge_pair`, `merge_corpus`, `cosine`, `softmax`, `p_greedy_path`, `audit`, `jaccard`) מומשו **בלי AI**, וכל תאי הבדיקה מדפיסים `✓` — כולל בדיקת היציבות הנומרית של `softmax`.
 - ✓ בכל חלק רשומה **תחזית לפני המדידה**, וההשוואה אליה מופיעה בניתוח.
 - ✓ חלק א': ההסבר ל-`vat` מתבסס על שכיחות במיזוגים, ונמצאה התופעה המקבילה במפענח האמיתי.
 - ✓ חלק ג': הנוסחה וההנחה שמאחוריה נכונות; האלגברה של הרמז ב-`softmax` כתובה.
@@ -1193,7 +1351,7 @@ for name in ["pandas", "openpyxl", "excel-fast-writer-pro"]:   # בדיקת שפ
 קובץ ה-Colab עם המימושים ותאי הבדיקה שעוברים, ולכל חלק: התחזית, הפלט, החישובים ותשובות לשאלות הניתוח. בסוף — משפטי המסקנה.
 
 **בונוס:**
-1. **BPE על עברית:** הוסיפו לקורפוס של חלק א' את `{"ממוצע": 8, "ממוצעים": 3, "מספר": 6, "מספרים": 4}` והריצו 20 מיזוגים. מה קורה עכשיו ל-`ממוצע`? מה זה אומר על הקשר בין כמות העברית בנתוני האימון לאיכות הטוקניזציה?
+1. **BPE על עברית:** הוסיפו לקורפוס עברית — `text_he = text + " " + " ".join(["ממוצע"] * 8 + ["ממוצעים"] * 3 + ["מספר"] * 6 + ["מספרים"] * 4)` — הריצו `train_bpe(text_he, 20)` ופרקו את `ממוצע`, `ממוצעים`, `מספרים`. מה קרה, לעומת `ממוצע` בחלק א'? מה זה אומר על הקשר בין כמות העברית בנתוני האימון לבין איכות הטוקניזציה?
 2. **ניסוי בין כלים:** חזרו על חלק ה' בכלי AI שני, וחשבו ג'קארד **בין הכלים** (איחוד ההמלצות של כל כלי). האם שני כלים מסכימים יותר או פחות משלוש הרצות של אותו כלי?
 
 <details>
@@ -1202,23 +1360,29 @@ for name in ["pandas", "openpyxl", "excel-fast-writer-pro"]:   # בדיקת שפ
 **מימושים לדוגמה (עוברים את כל תאי הבדיקה):**
 
 ```python
+def word_frequencies(text):
+    return dict(Counter(text.split()))
+
 def count_pairs(corpus):
     counts = Counter()
-    for tokens, freq in corpus:
-        for a, b in zip(tokens, tokens[1:]):
-            counts[(a, b)] += freq
+    for tokens, f in corpus.items():
+        for k in range(len(tokens) - 1):
+            counts[(tokens[k], tokens[k + 1])] += f
     return counts
 
 def merge_pair(tokens, pair):
-    out, i = [], 0
-    while i < len(tokens):
-        if i + 1 < len(tokens) and (tokens[i], tokens[i + 1]) == pair:
-            out.append(tokens[i] + tokens[i + 1])
-            i += 2
+    out, k = [], 0
+    while k < len(tokens):
+        if k + 1 < len(tokens) and (tokens[k], tokens[k + 1]) == pair:
+            out.append(tokens[k] + tokens[k + 1])
+            k += 2
         else:
-            out.append(tokens[i])
-            i += 1
-    return out
+            out.append(tokens[k])
+            k += 1
+    return tuple(out)
+
+def merge_corpus(corpus, pair):
+    return {merge_pair(tokens, pair): f for tokens, f in corpus.items()}
 
 def cosine(a, b):
     dot = sum(a_k * b_k for a_k, b_k in zip(a, b))
@@ -1243,19 +1407,12 @@ def jaccard(a, b):
     return len(a & b) / len(a | b)
 ```
 
-**חלק א' (נמדד):** עשרת המיזוגים: `t+a`, `ta+l`, `t+o`, `to+tal`, `r+i`, `ri+c`, `ric+e`, `p+rice`, `total+_`, `ta+x`. תוצאות:
+**חלק א' (נמדד):** `train_bpe(text, 4)` מדפיס בדיוק את טבלת ההרצאה: `u · g` (12) ← `ug`, `h · ug` (8) ← `hug`, `b · ug` (4) ← `bug`, `hug · s` (3) ← `hugs`. הטוקניזציה: `hug`, `hugs`, `bug` — טוקן אחד; `bugs` ← `('bug', 's')`; `bush` ← 4 אותיות; `ממוצע` ← 5 אותיות.
 
-```text
-total_price      → ['total_', 'price']
-price_with_vat   → ['price', '_', 'w', 'i', 't', 'h', '_', 'v', 'a', 't']
-total_vat        → ['total_', 'v', 'a', 't']
-ממוצע            → ['מ', 'מ', 'ו', 'צ', 'ע']
-```
-
-- (א) `total` (13 הופעות בקורפוס, כולל בתוך שמות ארוכים) ו-`price` (9) מספיק שכיחים כדי שהצמדים שלהם יאוחדו; `vat` מופיע פעם אחת, ולכן אף צמד שלו לא הגיע לראש הרשימה. במפענח האמיתי: `calculate | _total | _price | _with | _v | at` — אותה תופעה בדיוק.
-- (ב) אין עברית בקורפוס כמעט בכלל, ולכן אף מיזוג לא נלמד עליה — היא נשארת ברמת התו. זה המנגנון שמאחורי פי 2 טוקנים בעברית במפענחים אמיתיים.
-- (ג) o200k: אנגלית 12 טוקנים / 12 מילים = 1.0; עברית 15 / 7 ≈ 2.14. ב-120,000 טוקנים פנויים: כ-120,000 מילים באנגלית, כ-56,000 בעברית.
-- (ד) o200k: 6 טוקנים מול 5 — חיסכון של טוקן אחד, במחיר של שם חסר משמעות.
+- (א) בצעד 4: `hug · s` (3) מול `bug · s` (2) — רק המנצח נמזג.
+- (ב) עם `text2 = text + " bugs bugs"` (נמדד): `u · g` (14), `h · ug` (8), `b · ug` (6), `bug · s` (4) ← התוצאה מתהפכת: `bugs` טוקן אחד, `hugs` ← `('hug', 's')`.
+- (ג) o200k: אנגלית 12/12 = 1.0; עברית 15/7 ≈ 2.14. ב-120,000 טוקנים פנויים: כ-120,000 מילים באנגלית, כ-56,000 בעברית.
+- (ד) `vat` נשבר ל-`_v | at` כמו `bugs` (רצף נדיר); `_total`, `_price` שכיחים כמו `hugs`. `ממוצע` לא התמזגה כי אין עברית בקורפוס.
 
 **חלק ב':** `cosine([1,2,3], [-1,-2,-3]) = -1.0` — כיוונים הפוכים. דמיון קוסינוס תלוי רק בכיוון, לא באורך, ולכן הוא משווה "על מה הווקטור מצביע" (משמעות) בלי להיות מושפע מגודל הווקטור.
 
@@ -1294,7 +1451,7 @@ ERR  r2 = requests.get(URL, retries=3) -> TypeError: Session.request() got an un
 - (ב) לא: משלוש הרצות (4–9 המלצות) ההבדל בין 0 ל-1 חבילה בדויה הוא 0% מול 10%–25%. צריך מאות המלצות.
 - (ג) חבילה עם שם "סביר" שהועלתה לאחרונה = סימן אפשרי ל-slopsquatting. קיום ב-PyPI ≠ בטיחות.
 
-**בונוס 1 (נמדד, 20 מיזוגים):** `ממוצע → ['ממוצע']`, `ממוצעים → ['ממוצע', 'ים']`, `מספרים → ['מספרים']`. ברגע שיש מספיק עברית בקורפוס, המילים השכיחות הופכות לטוקן אחד — ואפילו סיומת הרבים `ים` נלמדת כיחידה נפרדת. הבעיה בעברית היא כמות הנתונים, לא השפה עצמה.
+**בונוס 1 (נמדד):** האלגוריתם עוצר אחרי 15 מיזוגים (כל המילים כבר טוקן אחד). `ממוצע`, `ממוצעים`, `מספרים` — כל אחת טוקן אחד (לעומת 5 אותיות בחלק א'); בדרך נלמדים `צע`, `ממו`, `ספר` וסיומת הרבים `ים` (צעד 10). הבעיה בעברית היא כמות הנתונים, לא השפה עצמה.
 
 </details>
 
