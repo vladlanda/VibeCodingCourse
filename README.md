@@ -9,14 +9,28 @@
 | `syllabus.md` | סילבוס מפורט: רציונל, מטרות למידה, כלים, מדיניות הערכה, תוכנית 13 המפגשים |
 | `project-brief.md` | מפרט מלא לפרויקט המסכם (סוכן AI לבעיה מתעשייה/מערכות מידע) |
 | `syllabus_university_format.docx` | סילבוס בפורמט הרשמי של המוסד (להגשה מנהלתית) |
-| `sessions/` | מצגות המפגשים (נבנות מפגש-מפגש) |
+| `materials/` | חומר ההרצאה המלא של כל מפגש (md): הסברים, ניסוח פורמלי, דוגמאות, שאלות בדיקה ודף נוסחאות |
+| `sessions/` | מצגות המפגשים: PDF במפגשים 1-4, pptx במפגשים 5-13 |
+| `exercises/` | מחברות Colab לתרגול: `HM_NN.ipynb` לסטודנט ו-`HM_NN_SOLUTION.ipynb` פתרון |
 
 ## סטטוס
 
 - [x] סילבוס
 - [x] מפרט פרויקט מסכם
 - [x] סילבוס בפורמט מוסדי
-- [ ] מצגות מפגשים 1-13
+- [x] מפגשים 1-4: חומר הרצאה, מצגת סופית ומחברת תרגול (במפגש 1 אין מחברת)
+- [ ] מפגשים 5-13: יש מצגות ומחברות ראשוניות, שעוד לא עברו את התהליך של מפגשים 1-4
+
+## מפגשים 1-4: חומר הרצאה, מצגות ומחברות
+
+| מפגש | נושא | חומר הרצאה | מצגת | מחברת | פתרון |
+|---|---|---|---|---|---|
+| 1 | מבוא: מהו Vibe Coding? | `materials/session-01-intro-vibe-coding.md` | `sessions/session-01-intro-vibe-coding.pdf` | — | — |
+| 2 | איך מודל שפה "חושב" קוד? | `materials/session-02-how-llm-thinks-code.md` | `sessions/session-02-how-llm-thinks-code.pdf` (+ גרסה מקוצרת) | `exercises/HM_02.ipynb` | `exercises/HM_02_SOLUTION.ipynb` |
+| 3 | Prompt Engineering לקוד | `materials/session-03-prompt-engineering.md` | `sessions/session-03-prompt-engineering.pdf` (+ גרסה מקוצרת) | `exercises/HM_03.ipynb` | `exercises/HM_03_SOLUTION.ipynb` |
+| 4 | Context Engineering: הקשר לאורך פרויקט שלם | `materials/session-04-context-engineering.md` | `sessions/שיעור 4 Context Engineering.pdf` | `exercises/HM_04.ipynb` | `exercises/HM_04_SOLUTION.ipynb` |
+
+המחברות של מפגשים 2-4 בנויות כמעבדה: הסטודנטים מממשים בעצמם, בלי AI, את המודלים מההרצאה. הבדיקות שבמחברות משתמשות במספרים מההרצאה. אחר כך הסטודנטים מודדים בניסוי את מה שבהרצאה הוצג להמחשה. במפגש 4 המצגת מציגה 191 שקופיות, כולל שלבי החשיפה.
 
 ## מפגשים 5-13: מצגות ומחברות Colab (תוספת)
 
